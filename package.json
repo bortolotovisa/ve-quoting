@@ -1,0 +1,17 @@
+{
+  "name": "ve-quoting",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "concurrently \"node server/index.js\" \"cd client && npm run dev\"",
+    "build": "cd client && npm run build",
+    "install:all": "npm install && cd client && npm install"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "better-sqlite3": "^9.4.3",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0",
+    "concurrently": "^8.2.2"
+  }
+}
