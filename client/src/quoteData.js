@@ -36,23 +36,34 @@ export const ADDON_PROCESSES = {
   ],
 }
 
-export function defaultActive(shop) {
+export function defaultProcs(shop) {
   const state = {}
-  ;(BASE_PROCESSES[shop] || []).forEach(p => { state[p.id] = true })
+  ;(BASE_PROCESSES[shop] || []).forEach(p => {
+    state[p.id] = { on: true, cx: 'M' }
+  })
   return state
 }
 
 export function calcItem(item) {
-  const mult = CX[item.cx]?.mult || 1
   const base = BASE_PROCESSES[item.shop] || []
   const addons = ADDON_PROCESSES[item.shop] || []
   const lines = [
-    ...base.filter(p => item.active?.[p.id]).map(p => ({
-      name: p.name, hrs: +(p.awo * mult).toFixed(2), isBase: true,
-    })),
-    ...addons.filter(p => item.addons?.[p.id]).map(p => ({
-      name: p.name, hrs: +(p.awo * mult).toFixed(2), isBase: false,
-    })),
+    ...base
+      .filter(p => item.procs?.[p.id]?.on)
+      .map(p => ({
+        name: p.name,
+        hrs: +(p.awo * (CX[item.procs[p.id].cx]?.mult || 1)).toFixed(2),
+        cx: item.procs[p.id].cx,
+        isBase: true,
+      })),
+    ...addons
+      .filter(p => item.addons?.[p.id])
+      .map(p => ({
+        name: p.name,
+        hrs: +(p.awo * (CX[item.addons[p.id].cx]?.mult || 1)).toFixed(2),
+        cx: item.addons[p.id].cx,
+        isBase: false,
+      })),
   ]
   const totalHrs = +lines.reduce((s, l) => s + l.hrs, 0).toFixed(2)
   return { lines, totalHrs }

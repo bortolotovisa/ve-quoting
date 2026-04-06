@@ -1,11 +1,14 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { v4 as uuidv4 } from 'https://esm.sh/uuid@9'
 import {
   CX, BASE_PROCESSES, ADDON_PROCESSES,
-  defaultActive, calcItem, calcQuoteTotalHrs
+  defaultProcs, calcItem, calcQuoteTotalHrs
 } from '../quoteData'
 import styles from './QuoteEditor.module.css'
+
+function generateId() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36)
+}
 
 export default function QuoteEditor() {
   const { id } = useParams()
@@ -36,27 +39,29 @@ export default function QuoteEditor() {
     } finally { setLoading(false) }
   }
 
-  const autoSave = useCallback((newName, newClient, newItems) => {
+  const autoSave = useCallback((n, c, itms) => {
     clearTimeout(saveTimer.current)
-    saveTimer.current = setTimeout(() => save(newName, newClient, newItems), 900)
+    saveTimer.current = setTimeout(() => save(n, c, itms), 900)
   }, [quoteId])
 
   async function save(n, c, itms) {
     setSaving(true)
-    const totalHrs = calcQuoteTotalHrs(itms)
-    const body = { name: n, client: c, items: itms, total_hours: totalHrs }
+    const total_hours = calcQuoteTotalHrs(itms)
+    const body = { name: n, client: c, items: itms, total_hours }
     if (!quoteId) {
       const r = await fetch('/api/quotes', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
       const { id: newId } = await r.json()
       setQuoteId(newId)
       window.history.replaceState(null, '', `/quote/${newId}`)
     } else {
       await fetch(`/api/quotes/${quoteId}`, {
-        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
     }
     setSaving(false)
@@ -65,13 +70,19 @@ export default function QuoteEditor() {
   }
 
   function update(newName, newClient, newItems) {
-    setName(newName); setClient(newClient); setItems(newItems)
+    setName(newName)
+    setClient(newClient)
+    setItems(newItems)
     autoSave(newName, newClient, newItems)
   }
 
   function addItem() {
     const shop = 'metal'
-    const newItem = { id: uuidv4(), desc: '', partNum: '', qty: 1, shop, cx: 'M', active: defaultActive(shop), addons: {} }
+    const newItem = {
+      id: generateId(),
+      desc: '', partNum: '', qty: 1,
+      shop, procs: defaultProcs(shop), addons: {},
+    }
     const next = [...items, newItem]
     update(name, client, next)
   }
@@ -80,24 +91,37 @@ export default function QuoteEditor() {
     update(name, client, items.filter(i => i.id !== itemId))
   }
 
-  function updateItem(itemId, patch) {
+  function patchItem(itemId, patch) {
     update(name, client, items.map(i => i.id === itemId ? { ...i, ...patch } : i))
   }
 
   function setShop(itemId, shop) {
-    updateItem(itemId, { shop, active: defaultActive(shop), addons: {} })
+    patchItem(itemId, { shop, procs: defaultProcs(shop), addons: {} })
   }
 
-  function toggleBase(itemId, pid) {
+  function toggleProc(itemId, pid) {
     const item = items.find(i => i.id === itemId)
-    updateItem(itemId, { active: { ...item.active, [pid]: !item.active[pid] } })
+    const procs = { ...item.procs, [pid]: { ...item.procs[pid], on: !item.procs[pid].on } }
+    patchItem(itemId, { procs })
+  }
+
+  function setProcCx(itemId, pid, cx) {
+    const item = items.find(i => i.id === itemId)
+    const procs = { ...item.procs, [pid]: { ...item.procs[pid], cx } }
+    patchItem(itemId, { procs })
   }
 
   function toggleAddon(itemId, aid) {
     const item = items.find(i => i.id === itemId)
     const addons = { ...item.addons }
-    addons[aid] ? delete addons[aid] : addons[aid] = true
-    updateItem(itemId, { addons })
+    addons[aid] ? delete addons[aid] : addons[aid] = { on: true, cx: 'M' }
+    patchItem(itemId, { addons })
+  }
+
+  function setAddonCx(itemId, aid, cx) {
+    const item = items.find(i => i.id === itemId)
+    const addons = { ...item.addons, [aid]: { ...item.addons[aid], cx } }
+    patchItem(itemId, { addons })
   }
 
   const totalHrs = calcQuoteTotalHrs(items)
@@ -110,7 +134,7 @@ export default function QuoteEditor() {
         <button className={styles.backBtn} onClick={() => nav('/')}>← All quotes</button>
         <div className={styles.saveStatus}>
           {saving ? <span className={styles.saving}>Saving...</span>
-            : saved ? <span className={styles.saved}>Saved</span>
+            : saved ? <span className={styles.saved}>Saved ✓</span>
             : null}
         </div>
       </div>
@@ -133,7 +157,9 @@ export default function QuoteEditor() {
         <div className={styles.headerRight}>
           <div className={styles.totalBlock}>
             <span className={styles.totalLabel}>Total labour</span>
-            <span className={styles.totalHrs}>{totalHrs.toFixed(1)}<span className={styles.totalUnit}>h</span></span>
+            <span className={styles.totalHrs}>
+              {totalHrs.toFixed(1)}<span className={styles.totalUnit}>h</span>
+            </span>
           </div>
           <button className={styles.addBtn} onClick={addItem}>+ Add item</button>
         </div>
@@ -152,35 +178,40 @@ export default function QuoteEditor() {
             item={item}
             idx={idx}
             onRemove={() => removeItem(item.id)}
-            onDescChange={v => updateItem(item.id, { desc: v })}
-            onPartChange={v => updateItem(item.id, { partNum: v })}
-            onQtyChange={v => updateItem(item.id, { qty: Math.max(1, parseInt(v) || 1) })}
+            onDesc={v => patchItem(item.id, { desc: v })}
+            onPart={v => patchItem(item.id, { partNum: v })}
+            onQty={v => patchItem(item.id, { qty: Math.max(1, parseInt(v) || 1) })}
             onShop={s => setShop(item.id, s)}
-            onCx={cx => updateItem(item.id, { cx })}
-            onToggleBase={pid => toggleBase(item.id, pid)}
+            onToggleProc={pid => toggleProc(item.id, pid)}
+            onProcCx={(pid, cx) => setProcCx(item.id, pid, cx)}
             onToggleAddon={aid => toggleAddon(item.id, aid)}
+            onAddonCx={(aid, cx) => setAddonCx(item.id, aid, cx)}
           />
         ))}
       </div>
 
-      {items.length > 0 && (
+      {items.length > 0 && calcQuoteTotalHrs(items) > 0 && (
         <div className={styles.summary}>
           <div className={styles.summaryTitle}>Summary</div>
           {items.map((item, idx) => {
             const { totalHrs: iHrs } = calcItem(item)
+            if (iHrs === 0) return null
             const lineHrs = +(iHrs * item.qty).toFixed(1)
             return (
               <div key={item.id} className={styles.sumRow}>
                 <span className={`${styles.shopDot} ${item.shop === 'metal' ? styles.dotMetal : styles.dotWood}`} />
-                <span className={styles.sumDesc}>{item.desc || `Item ${idx + 1}`}{item.qty > 1 ? ` ×${item.qty}` : ''}</span>
-                <span className={styles.sumInfo}>{CX[item.cx].label} · {iHrs.toFixed(1)}h/unit</span>
+                <span className={styles.sumDesc}>
+                  {item.desc || `Item ${idx + 1}`}
+                  {item.qty > 1 ? ` ×${item.qty}` : ''}
+                </span>
+                <span className={styles.sumInfo}>{iHrs.toFixed(1)}h/unit</span>
                 <span className={styles.sumHrs}>{lineHrs.toFixed(1)} h</span>
               </div>
             )
           })}
           <div className={styles.sumTotal}>
             <span>Total labour estimated</span>
-            <span className={`${styles.totalHrs} mono`}>{totalHrs.toFixed(1)} h</span>
+            <span className={styles.totalHrs}>{totalHrs.toFixed(1)} h</span>
           </div>
           <p className={styles.sumNote}>+ material cost (external) · apply Infor rates to these hours</p>
         </div>
@@ -189,32 +220,64 @@ export default function QuoteEditor() {
   )
 }
 
-function ItemCard({ item, idx, onRemove, onDescChange, onPartChange, onQtyChange, onShop, onCx, onToggleBase, onToggleAddon }) {
+function ProcRow({ proc, state, shop, isAddon, onToggle, onCx }) {
+  const on = state && state.on
+  const cx = state?.cx || 'M'
+  const isWood = shop === 'wood'
+  const activeClass = on
+    ? (isAddon ? styles.addonOn : isWood ? styles.woodOn : styles.metalOn)
+    : styles.removed
+
+  return (
+    <div className={`${styles.procRow} ${activeClass}`}>
+      <span className={styles.procName}>{proc.name}</span>
+      {on && <span className={styles.procAwo}>{proc.awo}h</span>}
+      {on && (
+        <div className={styles.cxPills}>
+          {['S', 'M', 'C'].map(c => (
+            <button
+              key={c}
+              className={`${styles.cxPill} ${on && cx === c ? styles['cx' + c] : ''}`}
+              onClick={() => onCx(c)}
+            >{c}</button>
+          ))}
+        </div>
+      )}
+      <button
+        className={on ? styles.removeBtn : styles.addBackBtn}
+        onClick={onToggle}
+      >
+        {on ? 'Remove' : '+ Add back'}
+      </button>
+    </div>
+  )
+}
+
+function ItemCard({ item, idx, onRemove, onDesc, onPart, onQty, onShop, onToggleProc, onProcCx, onToggleAddon, onAddonCx }) {
   const calc = calcItem(item)
-  const isWood = item.shop === 'wood'
   const baseProcs = BASE_PROCESSES[item.shop] || []
   const addonProcs = ADDON_PROCESSES[item.shop] || []
-  const removedCount = baseProcs.filter(p => !item.active[p.id]).length
+  const removedCount = baseProcs.filter(p => !item.procs?.[p.id]?.on).length
 
   return (
     <div className={styles.card}>
       <div className={styles.cardHeader}>
         <span className={styles.itemNum}>Item {idx + 1}</span>
-        <button className={styles.removeBtn} onClick={onRemove}>Remove</button>
+        <button className={styles.removeItemBtn} onClick={onRemove}>Remove item</button>
       </div>
 
       <div className={styles.fieldRow}>
         <div className={styles.fieldDesc}>
           <label className={styles.lbl}>Description</label>
-          <input value={item.desc} onChange={e => onDescChange(e.target.value)} placeholder="Ex: Midrack metal, Cashwrap wood..." />
+          <input value={item.desc} onChange={e => onDesc(e.target.value)} placeholder="Ex: Midrack metal, Cashwrap wood..." />
         </div>
-        <div className={styles.fieldPart}>
+        <div>
           <label className={styles.lbl}>Part # (optional)</label>
-          <input value={item.partNum} onChange={e => onPartChange(e.target.value)} placeholder="106828-00" />
+          <input value={item.partNum} onChange={e => onPart(e.target.value)} placeholder="106828-00" />
         </div>
         <div className={styles.fieldQty}>
           <label className={styles.lbl}>Qty</label>
-          <input type="number" min="1" value={item.qty} onChange={e => onQtyChange(e.target.value)} />
+          <input type="number" min="1" value={item.qty} onChange={e => onQty(e.target.value)} />
         </div>
       </div>
 
@@ -233,55 +296,38 @@ function ItemCard({ item, idx, onRemove, onDescChange, onPartChange, onQtyChange
           </div>
 
           <label className={styles.lbl}>
-            Processes
-            {removedCount > 0 && <span className={styles.removedNote}> · {removedCount} removed</span>}
+            Base processes
+            {removedCount > 0 && (
+              <span className={styles.removedNote}> · {removedCount} removed</span>
+            )}
           </label>
-          <div className={styles.chips}>
+          <div className={styles.procList}>
             {baseProcs.map(p => (
-              <span
-                key={p.id}
-                className={`${styles.chip} ${item.active[p.id] ? (isWood ? styles.chipWood : styles.chipMetal) : styles.chipOff}`}
-                onClick={() => onToggleBase(p.id)}
-              >
-                <span className={styles.chipX}>{item.active[p.id] ? '×' : '+'}</span>
-                {p.name}
-              </span>
+              <ProcRow
+                key={p.id} proc={p} state={item.procs?.[p.id]}
+                shop={item.shop} isAddon={false}
+                onToggle={() => onToggleProc(p.id)}
+                onCx={cx => onProcCx(p.id, cx)}
+              />
             ))}
           </div>
 
-          <label className={styles.lbl} style={{ marginTop: '12px' }}>Add-ons</label>
-          <div className={styles.chips}>
+          <div className={styles.addonSep}>Add-ons</div>
+          <div className={styles.procList}>
             {addonProcs.map(p => (
-              <span
-                key={p.id}
-                className={`${styles.chip} ${item.addons[p.id] ? styles.chipAddon : styles.chipOff}`}
-                onClick={() => onToggleAddon(p.id)}
-              >
-                <span className={styles.chipX}>{item.addons[p.id] ? '×' : '+'}</span>
-                {p.name}
-              </span>
+              <ProcRow
+                key={p.id} proc={p} state={item.addons?.[p.id]}
+                shop={item.shop} isAddon={true}
+                onToggle={() => onToggleAddon(p.id)}
+                onCx={cx => onAddonCx(p.id, cx)}
+              />
             ))}
           </div>
         </div>
 
         <div className={styles.rightCol}>
-          <label className={styles.lbl}>Complexity</label>
-          <div className={styles.cxGrid}>
-            {['S', 'M', 'C'].map(cx => (
-              <button
-                key={cx}
-                className={`${styles.cxCard} ${item.cx === cx ? styles['cx' + cx] : ''}`}
-                onClick={() => onCx(cx)}
-              >
-                <div className={styles.cxName}>{CX[cx].label}</div>
-                <div className={styles.cxDesc}>{CX[cx].desc}</div>
-                <div className={styles.cxMult}>×{CX[cx].mult.toFixed(1)}</div>
-              </button>
-            ))}
-          </div>
-
+          <label className={styles.lbl}>Estimated hours / unit</label>
           <div className={styles.resultBlock}>
-            <label className={styles.lbl}>Estimated hours / unit</label>
             {calc.lines.length === 0 ? (
               <p className={styles.noProcs}>No active processes</p>
             ) : (
@@ -290,22 +336,23 @@ function ItemCard({ item, idx, onRemove, onDescChange, onPartChange, onQtyChange
                   <div key={i} className={styles.resultLine}>
                     <span className={styles.resultName}>
                       {l.name}
+                      <span className={`${styles.cxTag} ${styles['cxTag' + l.cx]}`}>{l.cx}</span>
                       {!l.isBase && <span className={styles.addonTag}>add-on</span>}
                     </span>
-                    <span className={`${styles.resultHrs} mono`}>{l.hrs.toFixed(1)} h</span>
+                    <span className={styles.resultHrs}>{l.hrs.toFixed(1)} h</span>
                   </div>
                 ))}
                 <div className={styles.resultTotal}>
                   <div>
                     <div className={styles.totalLabel}>Total labour</div>
-                    <div className={`${styles.totalHrs} mono`}>
+                    <div className={styles.totalHrs}>
                       {calc.totalHrs.toFixed(1)}<span className={styles.totalUnit}> h/unit</span>
                     </div>
                   </div>
                   {item.qty > 1 && (
                     <div style={{ textAlign: 'right' }}>
                       <div className={styles.totalLabel}>× {item.qty} units</div>
-                      <div className={`${styles.totalHrs} mono`}>
+                      <div className={styles.totalHrs}>
                         {(calc.totalHrs * item.qty).toFixed(1)}<span className={styles.totalUnit}> h</span>
                       </div>
                     </div>
