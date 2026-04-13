@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import QuoteList from './pages/QuoteList'
 import QuoteEditor from './pages/QuoteEditor'
+import HistorySearch from './pages/HistorySearch'
 
 export default function App() {
   return (
@@ -9,6 +10,7 @@ export default function App() {
       <Route path="/" element={<QuoteList />} />
       <Route path="/quote/new" element={<QuoteEditor />} />
       <Route path="/quote/:id" element={<QuoteEditor />} />
+      <Route path="/history" element={<HistorySearch />} />
     </Routes>
   )
 }

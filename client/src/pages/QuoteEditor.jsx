@@ -1,21 +1,15 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import {
-  CX, BASE_PROCESSES, ADDON_PROCESSES,
-  defaultProcs, calcItem, calcQuoteTotalHrs
-} from '../quoteData'
+import { CX, BASE_PROCESSES, ADDON_PROCESSES, defaultProcs, calcItem, calcQuoteTotalHrs } from '../quoteData'
 import styles from './QuoteEditor.module.css'
 
-function generateId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36)
-}
+function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36) }
 
 export default function QuoteEditor() {
   const { id } = useParams()
   const nav = useNavigate()
   const isNew = !id
   const saveTimer = useRef(null)
-
   const [quoteId, setQuoteId] = useState(id || null)
   const [name, setName] = useState('New quote')
   const [client, setClient] = useState('')
@@ -24,18 +18,13 @@ export default function QuoteEditor() {
   const [saved, setSaved] = useState(false)
   const [loading, setLoading] = useState(!isNew)
 
-  useEffect(() => {
-    if (!isNew) loadQuote()
-    else addItem()
-  }, [])
+  useEffect(() => { if (!isNew) loadQuote(); else addItem() }, [])
 
   async function loadQuote() {
     try {
       const r = await fetch(`/api/quotes/${id}`)
       const q = await r.json()
-      setName(q.name)
-      setClient(q.client || '')
-      setItems(q.items || [])
+      setName(q.name); setClient(q.client || ''); setItems(q.items || [])
     } finally { setLoading(false) }
   }
 
@@ -46,86 +35,46 @@ export default function QuoteEditor() {
 
   async function save(n, c, itms) {
     setSaving(true)
-    const total_hours = calcQuoteTotalHrs(itms)
-    const body = { name: n, client: c, items: itms, total_hours }
+    const body = { name: n, client: c, items: itms, total_hours: calcQuoteTotalHrs(itms) }
     if (!quoteId) {
-      const r = await fetch('/api/quotes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
+      const r = await fetch('/api/quotes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const { id: newId } = await r.json()
       setQuoteId(newId)
       window.history.replaceState(null, '', `/quote/${newId}`)
     } else {
-      await fetch(`/api/quotes/${quoteId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
+      await fetch(`/api/quotes/${quoteId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     }
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000)
   }
 
-  function update(newName, newClient, newItems) {
-    setName(newName)
-    setClient(newClient)
-    setItems(newItems)
-    autoSave(newName, newClient, newItems)
-  }
-
+  function update(n, c, itms) { setName(n); setClient(c); setItems(itms); autoSave(n, c, itms) }
   function addItem() {
     const shop = 'metal'
-    const newItem = {
-      id: generateId(),
-      desc: '', partNum: '', qty: 1,
-      shop, procs: defaultProcs(shop), addons: {},
-    }
-    const next = [...items, newItem]
-    update(name, client, next)
+    update(name, client, [...items, { id: uid(), desc: '', partNum: '', qty: 1, shop, procs: defaultProcs(shop), addons: {} }])
   }
-
-  function removeItem(itemId) {
-    update(name, client, items.filter(i => i.id !== itemId))
+  function removeItem(iid) { update(name, client, items.filter(i => i.id !== iid)) }
+  function patch(iid, p) { update(name, client, items.map(i => i.id === iid ? { ...i, ...p } : i)) }
+  function setShop(iid, shop) { patch(iid, { shop, procs: defaultProcs(shop), addons: {} }) }
+  function toggleProc(iid, pid) {
+    const item = items.find(i => i.id === iid)
+    patch(iid, { procs: { ...item.procs, [pid]: { ...item.procs[pid], on: !item.procs[pid].on } } })
   }
-
-  function patchItem(itemId, patch) {
-    update(name, client, items.map(i => i.id === itemId ? { ...i, ...patch } : i))
+  function setProcCx(iid, pid, cx) {
+    const item = items.find(i => i.id === iid)
+    patch(iid, { procs: { ...item.procs, [pid]: { ...item.procs[pid], cx } } })
   }
-
-  function setShop(itemId, shop) {
-    patchItem(itemId, { shop, procs: defaultProcs(shop), addons: {} })
-  }
-
-  function toggleProc(itemId, pid) {
-    const item = items.find(i => i.id === itemId)
-    const procs = { ...item.procs, [pid]: { ...item.procs[pid], on: !item.procs[pid].on } }
-    patchItem(itemId, { procs })
-  }
-
-  function setProcCx(itemId, pid, cx) {
-    const item = items.find(i => i.id === itemId)
-    const procs = { ...item.procs, [pid]: { ...item.procs[pid], cx } }
-    patchItem(itemId, { procs })
-  }
-
-  function toggleAddon(itemId, aid) {
-    const item = items.find(i => i.id === itemId)
+  function toggleAddon(iid, aid) {
+    const item = items.find(i => i.id === iid)
     const addons = { ...item.addons }
     addons[aid] ? delete addons[aid] : addons[aid] = { on: true, cx: 'M' }
-    patchItem(itemId, { addons })
+    patch(iid, { addons })
   }
-
-  function setAddonCx(itemId, aid, cx) {
-    const item = items.find(i => i.id === itemId)
-    const addons = { ...item.addons, [aid]: { ...item.addons[aid], cx } }
-    patchItem(itemId, { addons })
+  function setAddonCx(iid, aid, cx) {
+    const item = items.find(i => i.id === iid)
+    patch(iid, { addons: { ...item.addons, [aid]: { ...item.addons[aid], cx } } })
   }
 
   const totalHrs = calcQuoteTotalHrs(items)
-
   if (loading) return <div className={styles.loading}>Loading...</div>
 
   return (
@@ -133,33 +82,19 @@ export default function QuoteEditor() {
       <div className={styles.topbar}>
         <button className={styles.backBtn} onClick={() => nav('/')}>← All quotes</button>
         <div className={styles.saveStatus}>
-          {saving ? <span className={styles.saving}>Saving...</span>
-            : saved ? <span className={styles.saved}>Saved ✓</span>
-            : null}
+          {saving ? <span className={styles.saving}>Saving...</span> : saved ? <span className={styles.saved}>Saved ✓</span> : null}
         </div>
       </div>
 
       <div className={styles.quoteHeader}>
         <div className={styles.headerLeft}>
-          <input
-            className={styles.nameInput}
-            value={name}
-            onChange={e => update(e.target.value, client, items)}
-            placeholder="Quote name"
-          />
-          <input
-            className={styles.clientInput}
-            value={client}
-            onChange={e => update(name, e.target.value, items)}
-            placeholder="Client (optional)"
-          />
+          <input className={styles.nameInput} value={name} onChange={e => update(e.target.value, client, items)} placeholder="Quote name" />
+          <input className={styles.clientInput} value={client} onChange={e => update(name, e.target.value, items)} placeholder="Client (optional)" />
         </div>
         <div className={styles.headerRight}>
           <div className={styles.totalBlock}>
             <span className={styles.totalLabel}>Total labour</span>
-            <span className={styles.totalHrs}>
-              {totalHrs.toFixed(1)}<span className={styles.totalUnit}>h</span>
-            </span>
+            <span className={styles.totalHrs}>{totalHrs.toFixed(1)}<span className={styles.totalUnit}>h</span></span>
           </div>
           <button className={styles.addBtn} onClick={addItem}>+ Add item</button>
         </div>
@@ -173,14 +108,11 @@ export default function QuoteEditor() {
           </div>
         )}
         {items.map((item, idx) => (
-          <ItemCard
-            key={item.id}
-            item={item}
-            idx={idx}
+          <ItemCard key={item.id} item={item} idx={idx}
             onRemove={() => removeItem(item.id)}
-            onDesc={v => patchItem(item.id, { desc: v })}
-            onPart={v => patchItem(item.id, { partNum: v })}
-            onQty={v => patchItem(item.id, { qty: Math.max(1, parseInt(v) || 1) })}
+            onDesc={v => patch(item.id, { desc: v })}
+            onPart={v => patch(item.id, { partNum: v })}
+            onQty={v => patch(item.id, { qty: Math.max(1, parseInt(v) || 1) })}
             onShop={s => setShop(item.id, s)}
             onToggleProc={pid => toggleProc(item.id, pid)}
             onProcCx={(pid, cx) => setProcCx(item.id, pid, cx)}
@@ -190,22 +122,19 @@ export default function QuoteEditor() {
         ))}
       </div>
 
-      {items.length > 0 && calcQuoteTotalHrs(items) > 0 && (
+      {totalHrs > 0 && (
         <div className={styles.summary}>
           <div className={styles.summaryTitle}>Summary</div>
           {items.map((item, idx) => {
-            const { totalHrs: iHrs } = calcItem(item)
-            if (iHrs === 0) return null
-            const lineHrs = +(iHrs * item.qty).toFixed(1)
+            const { totalHrs: ih } = calcItem(item)
+            if (!ih) return null
+            const lh = +(ih * item.qty).toFixed(1)
             return (
               <div key={item.id} className={styles.sumRow}>
                 <span className={`${styles.shopDot} ${item.shop === 'metal' ? styles.dotMetal : styles.dotWood}`} />
-                <span className={styles.sumDesc}>
-                  {item.desc || `Item ${idx + 1}`}
-                  {item.qty > 1 ? ` ×${item.qty}` : ''}
-                </span>
-                <span className={styles.sumInfo}>{iHrs.toFixed(1)}h/unit</span>
-                <span className={styles.sumHrs}>{lineHrs.toFixed(1)} h</span>
+                <span className={styles.sumDesc}>{item.desc || `Item ${idx + 1}`}{item.qty > 1 ? ` ×${item.qty}` : ''}</span>
+                <span className={styles.sumInfo}>{ih.toFixed(1)}h/unit</span>
+                <span className={styles.sumHrs}>{lh.toFixed(1)} h</span>
               </div>
             )
           })}
@@ -221,12 +150,10 @@ export default function QuoteEditor() {
 }
 
 function ProcRow({ proc, state, shop, isAddon, onToggle, onCx }) {
-  const on = state && state.on
+  const on = state?.on
   const cx = state?.cx || 'M'
   const isWood = shop === 'wood'
-  const activeClass = on
-    ? (isAddon ? styles.addonOn : isWood ? styles.woodOn : styles.metalOn)
-    : styles.removed
+  const activeClass = on ? (isAddon ? styles.addonOn : isWood ? styles.woodOn : styles.metalOn) : styles.removed
 
   return (
     <div className={`${styles.procRow} ${activeClass}`}>
@@ -235,18 +162,11 @@ function ProcRow({ proc, state, shop, isAddon, onToggle, onCx }) {
       {on && (
         <div className={styles.cxPills}>
           {['S', 'M', 'C'].map(c => (
-            <button
-              key={c}
-              className={`${styles.cxPill} ${on && cx === c ? styles['cx' + c] : ''}`}
-              onClick={() => onCx(c)}
-            >{c}</button>
+            <button key={c} className={`${styles.cxPill} ${on && cx === c ? styles['cx' + c] : ''}`} onClick={() => onCx(c)}>{c}</button>
           ))}
         </div>
       )}
-      <button
-        className={on ? styles.removeBtn : styles.addBackBtn}
-        onClick={onToggle}
-      >
+      <button className={on ? styles.removeBtn : styles.addBackBtn} onClick={onToggle}>
         {on ? 'Remove' : '+ Add back'}
       </button>
     </div>
@@ -287,40 +207,25 @@ function ItemCard({ item, idx, onRemove, onDesc, onPart, onQty, onShop, onToggle
         <div className={styles.leftCol}>
           <label className={styles.lbl}>Shop</label>
           <div className={styles.shopToggle}>
-            <button
-              className={`${styles.shopBtn} ${item.shop === 'metal' ? styles.shopMetal : ''}`}
-              onClick={() => onShop('metal')}>Metal shop</button>
-            <button
-              className={`${styles.shopBtn} ${item.shop === 'wood' ? styles.shopWood : ''}`}
-              onClick={() => onShop('wood')}>Wood shop</button>
+            <button className={`${styles.shopBtn} ${item.shop === 'metal' ? styles.shopMetal : ''}`} onClick={() => onShop('metal')}>Metal shop</button>
+            <button className={`${styles.shopBtn} ${item.shop === 'wood' ? styles.shopWood : ''}`} onClick={() => onShop('wood')}>Wood shop</button>
           </div>
 
           <label className={styles.lbl}>
-            Base processes
-            {removedCount > 0 && (
-              <span className={styles.removedNote}> · {removedCount} removed</span>
-            )}
+            Base processes {removedCount > 0 && <span className={styles.removedNote}>· {removedCount} removed</span>}
           </label>
           <div className={styles.procList}>
             {baseProcs.map(p => (
-              <ProcRow
-                key={p.id} proc={p} state={item.procs?.[p.id]}
-                shop={item.shop} isAddon={false}
-                onToggle={() => onToggleProc(p.id)}
-                onCx={cx => onProcCx(p.id, cx)}
-              />
+              <ProcRow key={p.id} proc={p} state={item.procs?.[p.id]} shop={item.shop} isAddon={false}
+                onToggle={() => onToggleProc(p.id)} onCx={cx => onProcCx(p.id, cx)} />
             ))}
           </div>
 
           <div className={styles.addonSep}>Add-ons</div>
           <div className={styles.procList}>
             {addonProcs.map(p => (
-              <ProcRow
-                key={p.id} proc={p} state={item.addons?.[p.id]}
-                shop={item.shop} isAddon={true}
-                onToggle={() => onToggleAddon(p.id)}
-                onCx={cx => onAddonCx(p.id, cx)}
-              />
+              <ProcRow key={p.id} proc={p} state={item.addons?.[p.id]} shop={item.shop} isAddon={true}
+                onToggle={() => onToggleAddon(p.id)} onCx={cx => onAddonCx(p.id, cx)} />
             ))}
           </div>
         </div>
@@ -345,16 +250,12 @@ function ItemCard({ item, idx, onRemove, onDesc, onPart, onQty, onShop, onToggle
                 <div className={styles.resultTotal}>
                   <div>
                     <div className={styles.totalLabel}>Total labour</div>
-                    <div className={styles.totalHrs}>
-                      {calc.totalHrs.toFixed(1)}<span className={styles.totalUnit}> h/unit</span>
-                    </div>
+                    <div className={styles.totalHrs}>{calc.totalHrs.toFixed(1)}<span className={styles.totalUnit}> h/unit</span></div>
                   </div>
                   {item.qty > 1 && (
                     <div style={{ textAlign: 'right' }}>
                       <div className={styles.totalLabel}>× {item.qty} units</div>
-                      <div className={styles.totalHrs}>
-                        {(calc.totalHrs * item.qty).toFixed(1)}<span className={styles.totalUnit}> h</span>
-                      </div>
+                      <div className={styles.totalHrs}>{(calc.totalHrs * item.qty).toFixed(1)}<span className={styles.totalUnit}> h</span></div>
                     </div>
                   )}
                 </div>

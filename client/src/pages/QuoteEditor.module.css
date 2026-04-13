@@ -9,24 +9,22 @@
 .quoteHeader { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
 .headerLeft { display:flex; flex-direction:column; gap:6px; flex:1; min-width:200px; }
 .nameInput { font-size:20px; font-weight:500; border:none; border-bottom:1.5px solid var(--border); border-radius:0; padding:4px 0; background:transparent; letter-spacing:-.01em; }
-.nameInput:focus { border-bottom-color:var(--text); outline:none; }
+.nameInput:focus { border-bottom-color:var(--text); }
 .clientInput { font-size:13px; border:none; border-bottom:1px solid var(--border2); border-radius:0; padding:3px 0; background:transparent; color:var(--text2); max-width:280px; }
-.clientInput:focus { border-bottom-color:var(--text); outline:none; }
+.clientInput:focus { border-bottom-color:var(--text); }
 .clientInput::placeholder { color:var(--text3); }
 .headerRight { display:flex; align-items:center; gap:14px; flex-shrink:0; }
 .totalBlock { text-align:right; }
 .totalLabel { font-size:11px; color:var(--text3); display:block; margin-bottom:1px; }
-.totalHrs { font-size:22px; font-weight:500; color:var(--text); font-family:'DM Mono', monospace; }
+.totalHrs { font-size:22px; font-weight:500; color:var(--text); font-family:'DM Mono',monospace; }
 .totalUnit { font-size:13px; font-weight:400; color:var(--text2); }
 .addBtn { background:var(--text); color:var(--bg); border:none; border-radius:var(--radius); padding:9px 16px; font-size:13px; font-weight:500; cursor:pointer; transition:opacity .15s; white-space:nowrap; }
 .addBtn:hover { opacity:.82; }
 .items { display:flex; flex-direction:column; gap:10px; }
 .emptyItems { text-align:center; padding:3rem; color:var(--text2); display:flex; flex-direction:column; align-items:center; gap:1rem; border:1px dashed var(--border); border-radius:var(--radius-lg); }
-
-/* Card */
 .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:14px 16px; }
 .cardHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-.itemNum { font-family:'DM Mono', monospace; font-size:11px; color:var(--text3); background:var(--surface2); padding:2px 8px; border-radius:4px; border:1px solid var(--border2); }
+.itemNum { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); background:var(--surface2); padding:2px 8px; border-radius:4px; border:1px solid var(--border2); }
 .removeItemBtn { background:none; border:none; font-size:12px; color:var(--text3); cursor:pointer; transition:color .15s; }
 .removeItemBtn:hover { color:var(--danger); }
 .fieldRow { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; margin-bottom:12px; align-items:end; }
@@ -36,20 +34,12 @@
 .removedNote { color:#BA7517; font-weight:400; font-size:10px; text-transform:none; letter-spacing:0; }
 .cardDivider { border:none; border-top:1px solid var(--border2); margin:12px 0; }
 .cardBody { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-@media (max-width:600px) {
-  .cardBody { grid-template-columns:1fr; }
-  .fieldRow { grid-template-columns:1fr 1fr; }
-  .fieldDesc { grid-column:span 2; }
-}
-
-/* Shop */
+@media (max-width:600px) { .cardBody { grid-template-columns:1fr; } .fieldRow { grid-template-columns:1fr 1fr; } .fieldDesc { grid-column:span 2; } }
 .shopToggle { display:flex; gap:5px; margin-bottom:12px; }
 .shopBtn { flex:1; padding:7px; font-size:12px; font-weight:500; border-radius:var(--radius); border:1px solid var(--border); background:transparent; color:var(--text2); cursor:pointer; transition:all .15s; }
 .shopBtn:hover { background:var(--surface2); }
 .shopMetal { background:var(--metal-bg) !important; color:var(--metal) !important; border-color:var(--metal-border) !important; }
 .shopWood  { background:var(--wood-bg)  !important; color:var(--wood)  !important; border-color:var(--wood-border)  !important; }
-
-/* Process rows */
 .procList { display:flex; flex-direction:column; gap:5px; }
 .procRow { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:8px; border:0.5px solid var(--border2); background:var(--surface); transition:all .15s; }
 .metalOn { background:var(--metal-bg); border-color:var(--metal-border); }
@@ -72,22 +62,18 @@
 .addBackBtn { font-size:11px; font-weight:500; padding:2px 8px; border-radius:6px; border:0.5px dashed var(--border); cursor:pointer; background:transparent; color:var(--text3); transition:all .12s; flex-shrink:0; }
 .addBackBtn:hover { background:var(--surface2); color:var(--text); }
 .addonSep { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin-top:10px; margin-bottom:5px; padding-top:10px; border-top:0.5px dashed var(--border); }
-
-/* Result */
 .resultBlock { background:var(--surface2); border-radius:var(--radius); padding:10px 12px; }
 .noProcs { font-size:12px; color:var(--text3); padding:4px 0; }
 .resultLine { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid var(--border2); gap:6px; }
 .resultLine:last-of-type { border-bottom:none; }
 .resultName { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:4px; flex:1; min-width:0; }
-.resultHrs { font-family:'DM Mono', monospace; font-size:12px; font-weight:500; color:var(--text); flex-shrink:0; }
+.resultHrs { font-family:'DM Mono',monospace; font-size:12px; font-weight:500; color:var(--text); flex-shrink:0; }
 .cxTag { font-size:10px; font-weight:600; padding:1px 5px; border-radius:4px; }
 .cxTagS { background:#E1F5EE; color:#085041; }
 .cxTagM { background:#FAEEDA; color:#633806; }
 .cxTagC { background:#FAECE7; color:#712B13; }
 .addonTag { font-size:9px; background:var(--warn-bg); color:var(--warn); padding:1px 5px; border-radius:3px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
 .resultTotal { display:flex; justify-content:space-between; align-items:baseline; margin-top:8px; padding-top:8px; border-top:1px solid var(--border); }
-
-/* Summary */
 .summary { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px 18px; margin-top:1.5rem; }
 .summaryTitle { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:var(--text3); margin-bottom:10px; }
 .sumRow { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border2); flex-wrap:wrap; }
@@ -97,6 +83,6 @@
 .dotWood  { background:var(--wood); }
 .sumDesc { font-size:13px; font-weight:500; color:var(--text); flex:1; min-width:100px; }
 .sumInfo { font-size:11px; color:var(--text3); }
-.sumHrs  { font-family:'DM Mono', monospace; font-size:13px; font-weight:500; color:var(--text); min-width:52px; text-align:right; }
+.sumHrs  { font-family:'DM Mono',monospace; font-size:13px; font-weight:500; color:var(--text); min-width:52px; text-align:right; }
 .sumTotal { display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:13px; color:var(--text2); }
 .sumNote { font-size:11px; color:var(--text3); margin-top:6px; }

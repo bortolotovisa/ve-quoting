@@ -15,22 +15,18 @@
   --wood: #085041;
   --wood-bg: #E1F5EE;
   --wood-border: #5DCAA5;
-  --accent: #1A1916;
-  --danger: #C0392B;
   --warn-bg: #FAEEDA;
   --warn: #633806;
   --warn-border: #EF9F27;
-  --green-bg: #E1F5EE;
-  --green: #085041;
+  --danger: #C0392B;
   --radius: 6px;
   --radius-lg: 10px;
 }
 
-html, body { height: 100%; }
+html, body { height: 100%; background: var(--bg); }
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--bg);
   color: var(--text);
   font-size: 14px;
   line-height: 1.5;
@@ -39,12 +35,10 @@ body {
 
 #root { min-height: 100%; }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-/* Base elements */
 input, select, textarea {
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
@@ -54,12 +48,9 @@ input, select, textarea {
   border-radius: var(--radius);
   padding: 7px 10px;
   width: 100%;
-  transition: border-color .15s;
   outline: none;
+  transition: border-color .15s;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input:focus, select:focus, textarea:focus { border-color: var(--text); }
 input::placeholder { color: var(--text3); }
-
 button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
-
-.mono { font-family: 'DM Mono', monospace; }

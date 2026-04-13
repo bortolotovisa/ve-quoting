@@ -1,7 +1,7 @@
 export const CX = {
-  S: { mult: 1.0, label: 'Simple',  desc: 'Peça padrão, sem customização' },
-  M: { mult: 1.3, label: 'Medium',  desc: 'Ajustes de dimensão ou acabamento' },
-  C: { mult: 1.7, label: 'Complex', desc: 'Customização significativa / novo' },
+  S: { mult: 1.0, label: 'Simple',  desc: 'Standard part, no customization' },
+  M: { mult: 1.3, label: 'Medium',  desc: 'Dimension or finish adjustments' },
+  C: { mult: 1.7, label: 'Complex', desc: 'Significant customization / new product' },
 }
 
 export const BASE_PROCESSES = {

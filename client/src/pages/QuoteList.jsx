@@ -37,9 +37,14 @@ export default function QuoteList() {
           </div>
           <p className={styles.sub}>Labour hours estimator · rates from 15,735 real WOs · 2025</p>
         </div>
-        <button className={styles.btnNew} onClick={() => nav('/quote/new')}>
-          + New quote
-        </button>
+        <div className={styles.headerActions}>
+          <button className={styles.btnHistory} onClick={() => nav('/history')}>
+            Infor history
+          </button>
+          <button className={styles.btnNew} onClick={() => nav('/quote/new')}>
+            + New quote
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -59,7 +64,7 @@ export default function QuoteList() {
               </div>
               <div className={styles.rowMeta}>
                 <span className={styles.rowItems}>{q.item_count} item{q.item_count !== 1 ? 's' : ''}</span>
-                <span className={styles.rowHrs}>{q.total_hours.toFixed(1)} h</span>
+                <span className={styles.rowHrs}>{parseFloat(q.total_hours).toFixed(1)} h</span>
                 <span className={styles.rowDate}>{fmt(q.updated_at)}</span>
                 <button className={styles.btnDel} onClick={e => deleteQuote(e, q.id)}>×</button>
               </div>
