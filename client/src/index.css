@@ -1,32 +1,39 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #F5F4F0;
-  --surface: #FFFFFF;
-  --surface2: #EFEDE8;
-  --border: #D8D5CE;
-  --border2: #E8E6E1;
-  --text: #1A1916;
-  --text2: #6B6860;
-  --text3: #A8A59E;
-  --metal: #3C3489;
-  --metal-bg: #EEEDFE;
-  --metal-border: #AFA9EC;
-  --wood: #085041;
-  --wood-bg: #E1F5EE;
-  --wood-border: #5DCAA5;
-  --warn-bg: #FAEEDA;
-  --warn: #633806;
-  --warn-border: #EF9F27;
-  --danger: #C0392B;
-  --radius: 6px;
-  --radius-lg: 10px;
+  --bg:        #0F0F0D;
+  --bg2:       #161613;
+  --bg3:       #1E1D19;
+  --bg4:       #252420;
+  --border:    #2E2D28;
+  --border2:   #3A3930;
+  --text:      #F0EDE6;
+  --text2:     #9B9890;
+  --text3:     #5C5A54;
+  --amber:     #E8891A;
+  --amber-dim: #3D2A0A;
+  --amber-mid: #7A4510;
+  --metal:     #7B9FD4;
+  --metal-bg:  #0F1E32;
+  --metal-bdr: #1E3A5C;
+  --wood:      #6DBF8A;
+  --wood-bg:   #0B2018;
+  --wood-bdr:  #174D2E;
+  --warn:      #D4854A;
+  --warn-bg:   #2A1808;
+  --warn-bdr:  #5C3010;
+  --danger:    #C0392B;
+  --radius:    4px;
+  --radius-lg: 6px;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body:    'Barlow', sans-serif;
+  --font-mono:    'IBM Plex Mono', monospace;
 }
 
 html, body { height: 100%; background: var(--bg); }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   color: var(--text);
   font-size: 14px;
   line-height: 1.5;
@@ -35,22 +42,25 @@ body {
 
 #root { min-height: 100%; }
 
-::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 input, select, textarea {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-body);
   font-size: 13px;
   color: var(--text);
-  background: var(--surface);
+  background: var(--bg3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 7px 10px;
+  padding: 8px 11px;
   width: 100%;
   outline: none;
   transition: border-color .15s;
 }
-input:focus, select:focus, textarea:focus { border-color: var(--text); }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--amber);
+  background: var(--bg4);
+}
 input::placeholder { color: var(--text3); }
-button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
+button { font-family: var(--font-body); cursor: pointer; }
