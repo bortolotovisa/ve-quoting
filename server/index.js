@@ -195,7 +195,7 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
       quote = JSON.parse(cleanText);
     } catch (parseErr) {
       console.error('[analyze-drawing] JSON parse error:', parseErr.message, '\nRaw:', rawText);
-      return res.status(500).json({ error: 'Model returned invalid JSON. Try again or add more context.' });
+      const preview = rawText.slice(0, 600); return res.status(500).json({ error: 'Parse error. Model said: ' + preview });
     }
 
     return res.json(quote);
