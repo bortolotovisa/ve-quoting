@@ -35,7 +35,7 @@ export default function HistorySearch() {
 
       <div className={styles.header}>
         <div className={styles.title}>Infor history</div>
-        <p className={styles.sub}>2,286 parts · real hours Jan 2025–Mar 2026 · use as reference when quoting</p>
+        <p className={styles.sub}>15,923 parts · real hours + materials · search by part number or description</p>
       </div>
 
       <div className={styles.searchWrap}>
@@ -43,7 +43,7 @@ export default function HistorySearch() {
           className={styles.searchInput}
           value={query}
           onChange={handleInput}
-          placeholder="Part number or description — e.g. 106828 or midrack..."
+          placeholder="Part number or description — e.g. 50-1378 or curved rack..."
           autoFocus
         />
         {loading && <div className={styles.spinner} />}
@@ -67,7 +67,7 @@ export default function HistorySearch() {
           <p>Type at least 2 characters to search</p>
           <p className={styles.examplesLabel}>Try:</p>
           <div className={styles.examples}>
-            {['midrack','cashwrap','gondola','faceout','mirror','shelf','platform','showcase'].map(t => (
+            {['50-1378','display table','cashwrap','gondola','faceout','shelf','bench','nesting'].map(t => (
               <span key={t} className={styles.exampleChip} onClick={() => quickSearch(t)}>{t}</span>
             ))}
           </div>
@@ -79,10 +79,14 @@ export default function HistorySearch() {
 
 function ResultCard({ item }) {
   const [open, setOpen] = useState(false)
+  const [tab, setTab] = useState('hours')
   const isWood = item.shop === 'Wood'
   const ops = Array.isArray(item.operations) ? item.operations : JSON.parse(item.operations || '[]')
+  const mats = Array.isArray(item.materials) ? item.materials : JSON.parse(item.materials || '[]')
   const sortedOps = [...ops].sort((a, b) => b.act_hrs - a.act_hrs)
+  const sortedMats = [...mats].sort((a, b) => b.avg_cost - a.avg_cost)
   const totalHrs = parseFloat(item.total_hrs)
+  const hasMats = sortedMats.length > 0
 
   return (
     <div className={styles.card}>
@@ -93,6 +97,8 @@ function ResultCard({ item }) {
           <span className={styles.partDesc}>{item.description}</span>
         </div>
         <div className={styles.cardRight}>
+          {hasMats && <span className={styles.matBadge}>BOM</span>}
+          <span className={styles.woCount}>{item.wo_count || 1} WO{(item.wo_count||1) !== 1 ? 's' : ''}</span>
           <span className={styles.totalHrs}>{totalHrs.toFixed(1)} h</span>
           <span className={styles.chevron}>{open ? '▲' : '▼'}</span>
         </div>
@@ -100,7 +106,18 @@ function ResultCard({ item }) {
 
       {open && (
         <div className={styles.opsBlock}>
-          {sortedOps.map((op, i) => {
+          {hasMats && (
+            <div className={styles.detailTabs}>
+              <button className={`${styles.dtab} ${tab === 'hours' ? styles.dtabActive : ''}`} onClick={() => setTab('hours')}>
+                Hours ({sortedOps.length})
+              </button>
+              <button className={`${styles.dtab} ${tab === 'materials' ? styles.dtabActive : ''}`} onClick={() => setTab('materials')}>
+                Materials ({sortedMats.length})
+              </button>
+            </div>
+          )}
+
+          {tab === 'hours' && sortedOps.map((op, i) => {
             const pct = totalHrs > 0 ? (op.act_hrs / totalHrs) * 100 : 0
             return (
               <div key={i} className={styles.opRow}>
@@ -113,7 +130,32 @@ function ResultCard({ item }) {
               </div>
             )
           })}
-          <p className={styles.opNote}>Real hours from Infor 2025 · use as reference when building your quote</p>
+
+          {tab === 'materials' && (
+            <div className={styles.matList}>
+              <div className={styles.matHeader}>
+                <span className={styles.matColId}>Part ID</span>
+                <span className={styles.matColDesc}>Description</span>
+                <span className={styles.matColQty}>Avg qty</span>
+                <span className={styles.matColCost}>Avg cost</span>
+              </div>
+              {sortedMats.map((m, i) => (
+                <div key={i} className={styles.matRow}>
+                  <span className={styles.matId}>{m.part_id}</span>
+                  <span className={styles.matDesc}>{m.desc}</span>
+                  <span className={styles.matQty}>{m.avg_qty}</span>
+                  <span className={styles.matCost}>${m.avg_cost.toFixed(2)}</span>
+                </div>
+              ))}
+              <div className={styles.matTotal}>
+                Total avg material cost: ${sortedMats.reduce((s, m) => s + m.avg_cost, 0).toFixed(2)}
+              </div>
+            </div>
+          )}
+
+          <p className={styles.opNote}>
+            Real data from Infor · {tab === 'hours' ? 'actual run hours' : 'actual material usage'} · use as reference when quoting
+          </p>
         </div>
       )}
     </div>

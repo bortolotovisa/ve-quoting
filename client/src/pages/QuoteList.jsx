@@ -35,11 +35,14 @@ export default function QuoteList() {
             <div className={styles.logoMark}>VE</div>
             <span className={styles.logoText}>Quoting</span>
           </div>
-          <span className={styles.sub}>Labour estimator · 15,735 real WOs · 2025</span>
+          <span className={styles.sub}>Labour estimator · 47,514 real WOs · 15,923 parts</span>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnHistory} onClick={() => nav('/history')}>
             Infor history
+          </button>
+          <button className={styles.btnHistory} onClick={() => nav('/materials')}>
+            Materials
           </button>
           <button className={styles.btnNew} onClick={() => nav('/quote/new')}>
             + New quote
