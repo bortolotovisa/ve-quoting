@@ -34,11 +34,11 @@ export default function HistorySearch() {
       </div>
       <div className={styles.header}>
         <div className={styles.title}>Infor history</div>
-        <p className={styles.sub}>16,263 parts · real hours + materials · search by part number or description</p>
+        <p className={styles.sub}>16,263 parts · real hours + materials · click a WO to see its breakdown</p>
       </div>
       <div className={styles.searchWrap}>
         <input className={styles.searchInput} value={query} onChange={handleInput}
-          placeholder="Part number or description — e.g. 50-1378 or curved rack..." autoFocus />
+          placeholder="Part number or description — e.g. 108630 or curved rack..." autoFocus />
         {loading && <div className={styles.spinner} />}
       </div>
       {searched && results.length === 0 && <div className={styles.empty}>No parts found for "{query}"</div>}
@@ -65,16 +65,10 @@ export default function HistorySearch() {
 
 function ResultCard({ item }) {
   const [open, setOpen] = useState(false)
-  const [tab, setTab] = useState('hours')
   const isWood = item.shop === 'Wood'
-  const ops = Array.isArray(item.operations) ? item.operations : JSON.parse(item.operations || '[]')
-  const mats = Array.isArray(item.materials) ? item.materials : JSON.parse(item.materials || '[]')
   const wos = Array.isArray(item.wos) ? item.wos : JSON.parse(item.wos || '[]')
-  const sortedOps = [...ops].sort((a, b) => b.act_hrs - a.act_hrs)
-  const sortedMats = [...mats].sort((a, b) => b.avg_cost - a.avg_cost)
   const totalHrs = parseFloat(item.total_hrs)
-  const hasMats = sortedMats.length > 0
-  const hasWos = wos.length > 0
+  const hasMats = wos.some(w => w.mats && w.mats.length > 0)
 
   return (
     <div className={styles.card}>
@@ -94,74 +88,86 @@ function ResultCard({ item }) {
 
       {open && (
         <div className={styles.opsBlock}>
-          {/* WO details section */}
-          {hasWos && wos.length > 0 && (
-            <div className={styles.woSection}>
-              <div className={styles.woSectionTitle}>Work orders</div>
-              {wos.map((wo, i) => (
-                <div key={i} className={styles.woRow}>
-                  <span className={`${styles.woStatus} ${wo.s === 'C' ? styles.woClosed : wo.s === 'R' ? styles.woReleased : styles.woOther}`}>
-                    {wo.s === 'C' ? 'Closed' : wo.s === 'R' ? 'Released' : 'Open'}
-                  </span>
-                  <span className={styles.woId}>{wo.id}</span>
-                  <span className={styles.woDate}>{wo.d || '—'}</span>
-                  <span className={styles.woHrs}>{wo.h.toFixed(1)} h</span>
-                  <span className={styles.woMat}>${wo.m.toFixed(0)}</span>
-                </div>
-              ))}
+          <div className={styles.woSectionTitle}>
+            Work orders — click to expand
+          </div>
+          {wos.map((wo, i) => <WORow key={i} wo={wo} isWood={isWood} />)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function WORow({ wo, isWood }) {
+  const [expanded, setExpanded] = useState(false)
+  const [tab, setTab] = useState('hours')
+  const ops = wo.ops || []
+  const mats = wo.mats || []
+  const hasMats = mats.length > 0
+
+  return (
+    <div className={styles.woCard}>
+      <div className={styles.woRow} onClick={() => setExpanded(e => !e)}>
+        <span className={`${styles.woStatus} ${wo.s === 'C' ? styles.woClosed : wo.s === 'R' ? styles.woReleased : styles.woOther}`}>
+          {wo.s === 'C' ? 'Closed' : wo.s === 'R' ? 'Released' : 'Open'}
+        </span>
+        <span className={styles.woId}>{wo.id}</span>
+        <span className={styles.woDate}>{wo.d || '—'}</span>
+        <span className={styles.woHrs}>{wo.h.toFixed(1)} h</span>
+        <span className={styles.woMat}>${wo.m.toFixed(0)}</span>
+        <span className={styles.woChevron}>{expanded ? '−' : '+'}</span>
+      </div>
+
+      {expanded && (
+        <div className={styles.woDetail}>
+          {hasMats && (
+            <div className={styles.detailTabs}>
+              <button className={`${styles.dtab} ${tab === 'hours' ? styles.dtabActive : ''}`} onClick={() => setTab('hours')}>
+                Hours ({ops.length})
+              </button>
+              <button className={`${styles.dtab} ${tab === 'materials' ? styles.dtabActive : ''}`} onClick={() => setTab('materials')}>
+                Materials ({mats.length})
+              </button>
             </div>
           )}
 
-          {/* Tabs */}
-          <div className={styles.detailTabs}>
-            <button className={`${styles.dtab} ${tab === 'hours' ? styles.dtabActive : ''}`} onClick={() => setTab('hours')}>
-              Hours ({sortedOps.length})
-            </button>
-            {hasMats && (
-              <button className={`${styles.dtab} ${tab === 'materials' ? styles.dtabActive : ''}`} onClick={() => setTab('materials')}>
-                Materials ({sortedMats.length})
-              </button>
-            )}
-          </div>
-
-          {tab === 'hours' && sortedOps.map((op, i) => {
-            const pct = totalHrs > 0 ? (op.act_hrs / totalHrs) * 100 : 0
+          {tab === 'hours' && ops.length > 0 && ops.map((op, i) => {
+            const pct = wo.h > 0 ? (op.h / wo.h) * 100 : 0
             return (
               <div key={i} className={styles.opRow}>
-                <span className={styles.opName}>{op.operation}</span>
+                <span className={styles.opName}>{op.n}</span>
                 <div className={styles.opBarWrap}>
                   <div className={`${styles.opBar} ${isWood ? styles.barWood : styles.barMetal}`} style={{ width: `${Math.max(pct, 2)}%` }} />
                 </div>
-                <span className={styles.opHrs}>{op.act_hrs.toFixed(1)} h</span>
+                <span className={styles.opHrs}>{op.h.toFixed(1)} h</span>
               </div>
             )
           })}
+          {tab === 'hours' && ops.length === 0 && (
+            <div className={styles.noData}>No operation hours recorded</div>
+          )}
 
-          {tab === 'materials' && (
+          {tab === 'materials' && mats.length > 0 && (
             <div className={styles.matList}>
               <div className={styles.matHeader}>
                 <span className={styles.matColId}>Part ID</span>
                 <span className={styles.matColDesc}>Description</span>
-                <span className={styles.matColQty}>Avg qty</span>
-                <span className={styles.matColCost}>Avg cost</span>
+                <span className={styles.matColQty}>Qty</span>
+                <span className={styles.matColCost}>Cost</span>
               </div>
-              {sortedMats.map((m, i) => (
+              {mats.map((m, i) => (
                 <div key={i} className={styles.matRow}>
-                  <span className={styles.matId}>{m.part_id}</span>
-                  <span className={styles.matDesc}>{m.desc}</span>
-                  <span className={styles.matQty}>{m.avg_qty}</span>
-                  <span className={styles.matCost}>${m.avg_cost.toFixed(2)}</span>
+                  <span className={styles.matId}>{m.id}</span>
+                  <span className={styles.matDesc}>{m.d}</span>
+                  <span className={styles.matQty}>{m.q}</span>
+                  <span className={styles.matCost}>${m.c.toFixed(2)}</span>
                 </div>
               ))}
               <div className={styles.matTotal}>
-                Total avg material cost: ${sortedMats.reduce((s, m) => s + m.avg_cost, 0).toFixed(2)}
+                Material total: ${mats.reduce((s, m) => s + m.c, 0).toFixed(2)}
               </div>
             </div>
           )}
-
-          <p className={styles.opNote}>
-            Real data from Infor · {tab === 'hours' ? 'actual run hours (aggregated across all WOs)' : 'actual material usage'}
-          </p>
         </div>
       )}
     </div>

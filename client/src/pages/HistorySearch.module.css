@@ -21,6 +21,7 @@
 .exampleChip { font-family:var(--font-mono); font-size:12px; padding:4px 12px; border:1px solid var(--border); border-radius:20px; cursor:pointer; color:var(--text2); background:var(--bg2); transition:all .15s; box-shadow:var(--shadow-sm); }
 .exampleChip:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
 
+/* Part card */
 .card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-xl); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow .15s; }
 .card:hover { box-shadow:var(--shadow); }
 .cardHeader { display:flex; justify-content:space-between; align-items:center; padding:13px 18px; cursor:pointer; transition:background .1s; gap:10px; }
@@ -37,47 +38,55 @@
 .totalHrs { font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--text); }
 .chevron { font-size:10px; color:var(--text3); }
 
-.opsBlock { border-top:1px solid var(--border); padding:14px 18px; background:var(--bg3); display:flex; flex-direction:column; gap:7px; }
+/* Expanded area */
+.opsBlock { border-top:1px solid var(--border); padding:14px 18px; background:var(--bg3); }
+.woSectionTitle { font-size:11px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
 
-/* WO details section */
-.woSection { margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-.woSectionTitle { font-size:11px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
-.woRow { display:flex; align-items:center; gap:10px; padding:5px 0; font-size:12px; border-bottom:1px solid var(--border); }
-.woRow:last-child { border-bottom:none; }
+/* Individual WO card */
+.woCard { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:6px; background:var(--bg2); }
+.woCard:last-child { margin-bottom:0; }
+
+.woRow { display:flex; align-items:center; gap:10px; padding:10px 14px; cursor:pointer; transition:background .1s; font-size:12px; }
+.woRow:hover { background:var(--bg3); }
 .woStatus { font-family:var(--font-mono); font-size:10px; font-weight:500; padding:2px 7px; border-radius:10px; flex-shrink:0; min-width:60px; text-align:center; }
 .woClosed { background:var(--wood-bg); color:var(--wood); border:1px solid var(--wood-bdr); }
 .woReleased { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bdr); }
 .woOther { background:var(--bg4); color:var(--text3); border:1px solid var(--border); }
 .woId { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); min-width:100px; }
-.woDate { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:90px; }
+.woDate { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:90px; flex:1; }
 .woHrs { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); min-width:50px; text-align:right; }
-.woMat { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:50px; text-align:right; }
+.woMat { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:55px; text-align:right; }
+.woChevron { font-size:14px; color:var(--text3); font-weight:300; width:20px; text-align:center; flex-shrink:0; }
+
+/* WO detail (expanded) */
+.woDetail { border-top:1px solid var(--border); padding:12px 14px; background:var(--bg3); }
+.noData { font-size:12px; color:var(--text3); padding:6px 0; }
 
 /* Tabs */
-.detailTabs { display:flex; gap:4px; margin-bottom:6px; background:var(--bg4); padding:2px; border-radius:var(--radius); }
+.detailTabs { display:flex; gap:4px; margin-bottom:8px; background:var(--bg4); padding:2px; border-radius:var(--radius); }
 .dtab { flex:1; padding:5px 12px; font-size:12px; font-weight:500; background:transparent; border:none; border-radius:4px; color:var(--text3); cursor:pointer; transition:all .15s; }
 .dtab:hover { color:var(--text2); }
 .dtabActive { background:var(--bg2); color:var(--text); box-shadow:var(--shadow-sm); }
 
-.opRow { display:flex; align-items:center; gap:10px; }
-.opName { font-size:12px; color:var(--text2); min-width:150px; flex-shrink:0; }
+/* Operation rows */
+.opRow { display:flex; align-items:center; gap:10px; padding:3px 0; }
+.opName { font-size:12px; color:var(--text2); min-width:140px; flex-shrink:0; }
 .opBarWrap { flex:1; height:5px; background:var(--border); border-radius:10px; overflow:hidden; }
 .opBar { height:100%; border-radius:10px; transition:width .4s cubic-bezier(.4,0,.2,1); }
 .barMetal { background:var(--metal); }
 .barWood  { background:var(--wood); }
 .opHrs { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); min-width:50px; text-align:right; flex-shrink:0; }
 
+/* Materials table */
 .matList { display:flex; flex-direction:column; }
 .matHeader { display:flex; gap:8px; padding:4px 0 6px; border-bottom:1px solid var(--border); font-size:10px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; }
-.matRow { display:flex; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); align-items:center; font-size:12px; }
+.matRow { display:flex; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); align-items:center; font-size:12px; }
 .matRow:last-child { border-bottom:none; }
-.matColId, .matId { font-family:var(--font-mono); min-width:90px; flex-shrink:0; }
-.matId { color:var(--text2); font-size:12px; }
+.matColId, .matId { font-family:var(--font-mono); min-width:85px; flex-shrink:0; }
+.matId { color:var(--text2); }
 .matColDesc, .matDesc { flex:1; min-width:0; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.matColQty, .matQty { font-family:var(--font-mono); min-width:60px; text-align:right; flex-shrink:0; }
+.matColQty, .matQty { font-family:var(--font-mono); min-width:50px; text-align:right; flex-shrink:0; }
 .matQty { color:var(--text); font-weight:500; }
-.matColCost, .matCost { font-family:var(--font-mono); min-width:70px; text-align:right; flex-shrink:0; }
+.matColCost, .matCost { font-family:var(--font-mono); min-width:65px; text-align:right; flex-shrink:0; }
 .matCost { color:var(--text); font-weight:500; }
-.matTotal { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); text-align:right; padding-top:8px; margin-top:4px; border-top:1px solid var(--border2); }
-
-.opNote { font-family:var(--font-mono); font-size:11px; color:var(--text3); margin-top:4px; padding-top:10px; border-top:1px solid var(--border); }
+.matTotal { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); text-align:right; padding-top:6px; margin-top:4px; border-top:1px solid var(--border2); }
