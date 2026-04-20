@@ -8,7 +8,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.use(cors());
-app.use(express.json({ limit: '20mb' })); // increased for base64 image uploads
+app.use(express.json({ limit: '20mb' }));
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -22,7 +22,6 @@ async function initDB() {
     items JSONB NOT NULL DEFAULT '[]', total_hours NUMERIC DEFAULT 0
   )`);
 
-  // Recreate history if schema changed
   try {
     const r = await pool.query("SELECT column_name FROM information_schema.columns WHERE table_name='infor_history' AND column_name='wos'");
     if (r.rows.length === 0) throw new Error('missing wos column');
@@ -102,7 +101,7 @@ app.get('/api/history/search', async (req, res) => {
 });
 
 // ── AI Drawing Analyzer ───────────────────────────────────────
-const DRAWING_SYSTEM_PROMPT = `You are an expert estimator for a store fixtures manufacturer (Visual Elements, Vaughan Ontario) specializing in wood and metal components: MDF cabinets, melamine panels, lacquered and veneer finishes, metal frames, CNC-machined parts, edge banding, and hardware (Blum, Häfele, Sugatsune).
+const DRAWING_SYSTEM_PROMPT = `You are an expert estimator for a store fixtures manufacturer (Visual Elements, Vaughan Ontario) specializing in wood and metal components: MDF cabinets, melamine panels, lacquered and veneer finishes, metal frames, CNC-machined parts, edge banding, and hardware (Blum, Hafele, Sugatsune).
 
 Analyze the uploaded drawing or render and produce a detailed production quote.
 
@@ -112,20 +111,20 @@ Rules:
 - If dimensions are not visible, estimate from visual proportions and typical retail fixture sizes
 - Express hours as decimal (e.g. 2.5)
 - All monetary values in CAD
-- Return ONLY valid JSON — no markdown fences, no explanation, no preamble
+- IMPORTANT: Return ONLY a raw JSON object. No markdown, no backticks, no explanation before or after. Start your response with { and end with }.
 
-JSON structure (return exactly this shape):
+JSON structure:
 {
   "part_name": "string",
-  "confidence": "high | medium | low",
-  "summary": "2-3 sentence description of the piece and its likely use",
+  "confidence": "high or medium or low",
+  "summary": "2-3 sentence description",
   "dimensions_estimated": { "width_mm": number, "height_mm": number, "depth_mm": number },
   "materials": [{ "name": "string", "spec": "string", "qty": "string", "unit_cost": number, "total_cost": number }],
   "operations": [{ "operation": "string", "hours": number, "rate_cad": number, "total_cad": number }],
   "hardware": [{ "item": "string", "qty": number, "unit_cost": number, "total_cost": number }],
   "totals": { "materials_cad": number, "labour_cad": number, "hardware_cad": number, "subtotal_cad": number, "markup_15pct": number, "grand_total_cad": number },
   "lead_time_days": number,
-  "notes": "string — caveats, assumptions, and flags for the estimator"
+  "notes": "string"
 }`;
 
 app.post('/api/quotes/analyze-drawing', async (req, res) => {
@@ -150,7 +149,12 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
       type: isPdf ? 'document' : 'image',
       source: { type: 'base64', media_type: mimeType, data: imageBase64 }
     },
-    { type: 'text', text: context ? `Analyze and quote. Estimator context: ${context}` : 'Analyze this drawing and produce the quote JSON.' }
+    {
+      type: 'text',
+      text: context
+        ? `Analyze and quote. Estimator context: ${context}`
+        : 'Analyze this drawing and produce the quote JSON. Remember: respond with raw JSON only, starting with {.'
+    }
   ];
 
   try {
@@ -163,7 +167,7 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
-        max_tokens: 1500,
+        max_tokens: 2000,
         system: DRAWING_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userContent }]
       })
@@ -177,7 +181,14 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
     }
 
     const rawText = apiData.content.filter(b => b.type === 'text').map(b => b.text).join('');
-    const cleanText = rawText.replace(/```json|```/g, '').trim();
+
+    // Robust JSON extraction: strip markdown fences, find outermost { ... }
+    let cleanText = rawText.replace(/```json|```/g, '').trim();
+    const jsonStart = cleanText.indexOf('{');
+    const jsonEnd   = cleanText.lastIndexOf('}');
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleanText = cleanText.slice(jsonStart, jsonEnd + 1);
+    }
 
     let quote;
     try {
