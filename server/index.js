@@ -8,7 +8,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '20mb' })); // increased for base64 image uploads
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -62,6 +62,7 @@ async function initDB() {
   console.log('DB ready');
 }
 
+// ── Quotes CRUD ───────────────────────────────────────────────
 app.get('/api/quotes', async (req, res) => {
   const { rows } = await pool.query('SELECT id,name,client,created_at,updated_at,total_hours,jsonb_array_length(items) as item_count FROM quotes ORDER BY updated_at DESC');
   res.json(rows);
@@ -90,6 +91,7 @@ app.delete('/api/quotes/:id', async (req, res) => {
   res.json({ok:true});
 });
 
+// ── Infor history search ───────────────────────────────────────
 app.get('/api/history/search', async (req, res) => {
   const q = (req.query.q||'').trim();
   if (!q || q.length < 2) return res.json([]);
@@ -99,6 +101,97 @@ app.get('/api/history/search', async (req, res) => {
   res.json(rows);
 });
 
+// ── AI Drawing Analyzer ───────────────────────────────────────
+const DRAWING_SYSTEM_PROMPT = `You are an expert estimator for a store fixtures manufacturer (Visual Elements, Vaughan Ontario) specializing in wood and metal components: MDF cabinets, melamine panels, lacquered and veneer finishes, metal frames, CNC-machined parts, edge banding, and hardware (Blum, Häfele, Sugatsune).
+
+Analyze the uploaded drawing or render and produce a detailed production quote.
+
+Rules:
+- Be realistic for a North American custom millwork / store fixtures shop
+- Labour rates: CNC programming CA$75/h, CNC machining CA$65/h, assembly CA$55/h, finishing CA$50/h, hardware installation CA$45/h
+- If dimensions are not visible, estimate from visual proportions and typical retail fixture sizes
+- Express hours as decimal (e.g. 2.5)
+- All monetary values in CAD
+- Return ONLY valid JSON — no markdown fences, no explanation, no preamble
+
+JSON structure (return exactly this shape):
+{
+  "part_name": "string",
+  "confidence": "high | medium | low",
+  "summary": "2-3 sentence description of the piece and its likely use",
+  "dimensions_estimated": { "width_mm": number, "height_mm": number, "depth_mm": number },
+  "materials": [{ "name": "string", "spec": "string", "qty": "string", "unit_cost": number, "total_cost": number }],
+  "operations": [{ "operation": "string", "hours": number, "rate_cad": number, "total_cad": number }],
+  "hardware": [{ "item": "string", "qty": number, "unit_cost": number, "total_cost": number }],
+  "totals": { "materials_cad": number, "labour_cad": number, "hardware_cad": number, "subtotal_cad": number, "markup_15pct": number, "grand_total_cad": number },
+  "lead_time_days": number,
+  "notes": "string — caveats, assumptions, and flags for the estimator"
+}`;
+
+app.post('/api/quotes/analyze-drawing', async (req, res) => {
+  const { imageBase64, mimeType, context } = req.body;
+
+  if (!imageBase64 || !mimeType) {
+    return res.status(400).json({ error: 'imageBase64 and mimeType are required.' });
+  }
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+  if (!allowedTypes.includes(mimeType)) {
+    return res.status(400).json({ error: `Unsupported file type: ${mimeType}` });
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set in environment.' });
+  }
+
+  const userContent = [
+    { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
+    { type: 'text', text: context ? `Analyze and quote. Estimator context: ${context}` : 'Analyze this drawing and produce the quote JSON.' }
+  ];
+
+  try {
+    const apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-opus-4-6',
+        max_tokens: 1500,
+        system: DRAWING_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userContent }]
+      })
+    });
+
+    const apiData = await apiResponse.json();
+
+    if (!apiResponse.ok) {
+      console.error('[analyze-drawing] Anthropic error:', apiData);
+      return res.status(apiResponse.status).json({ error: apiData.error?.message || 'Anthropic API error' });
+    }
+
+    const rawText = apiData.content.filter(b => b.type === 'text').map(b => b.text).join('');
+    const cleanText = rawText.replace(/```json|```/g, '').trim();
+
+    let quote;
+    try {
+      quote = JSON.parse(cleanText);
+    } catch (parseErr) {
+      console.error('[analyze-drawing] JSON parse error:', parseErr.message, '\nRaw:', rawText);
+      return res.status(500).json({ error: 'Model returned invalid JSON. Try again or add more context.' });
+    }
+
+    return res.json(quote);
+
+  } catch (networkErr) {
+    console.error('[analyze-drawing] Network error:', networkErr.message);
+    return res.status(500).json({ error: 'Failed to reach Anthropic API: ' + networkErr.message });
+  }
+});
+
+// ── Static (production) ───────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../client/dist')));
   app.get('*', (_, res) => res.sendFile(path.join(__dirname, '../client/dist/index.html')));

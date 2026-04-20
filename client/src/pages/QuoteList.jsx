@@ -44,6 +44,9 @@ export default function QuoteList() {
           <button className={styles.btnHistory} onClick={() => nav('/materials')}>
             Materials
           </button>
+          <button className={styles.btnAI} onClick={() => nav('/drawing-quote')}>
+            ✦ AI drawing quote
+          </button>
           <button className={styles.btnNew} onClick={() => nav('/quote/new')}>
             + New quote
           </button>
