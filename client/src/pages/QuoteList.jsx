@@ -35,7 +35,7 @@ export default function QuoteList() {
             <div className={styles.logoMark}>VE</div>
             <span className={styles.logoText}>Quoting</span>
           </div>
-          <span className={styles.sub}>Labour estimator · 47,514 real WOs · 15,923 parts</span>
+          <span className={styles.sub}>Labour estimator · 47,514 real WOs · 16,263 parts</span>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.btnHistory} onClick={() => nav('/history')}>

@@ -16,55 +16,50 @@ const pool = new Pool({
 });
 
 async function initDB() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS quotes (
-      id TEXT PRIMARY KEY, name TEXT NOT NULL, client TEXT DEFAULT '',
-      created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
-      items JSONB NOT NULL DEFAULT '[]', total_hours NUMERIC DEFAULT 0
-    )
-  `);
+  await pool.query(`CREATE TABLE IF NOT EXISTS quotes (
+    id TEXT PRIMARY KEY, name TEXT NOT NULL, client TEXT DEFAULT '',
+    created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
+    items JSONB NOT NULL DEFAULT '[]', total_hours NUMERIC DEFAULT 0
+  )`);
 
-  // Check if we need to recreate history table with materials
-  let needsRecreate = false;
+  // Always recreate history to ensure schema matches
+  let count = 0;
   try {
-    await pool.query('SELECT materials FROM infor_history LIMIT 1');
+    const r = await pool.query('SELECT wos FROM infor_history LIMIT 1');
+    const c = await pool.query('SELECT COUNT(*) FROM infor_history');
+    count = parseInt(c.rows[0].count);
   } catch(e) {
-    needsRecreate = true;
-  }
-
-  if (needsRecreate) {
-    console.log('Recreating infor_history with materials column...');
     await pool.query('DROP TABLE IF EXISTS infor_history');
+    count = 0;
   }
 
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS infor_history (
-      id SERIAL PRIMARY KEY, part_num TEXT NOT NULL, description TEXT NOT NULL,
-      shop TEXT NOT NULL, total_hrs NUMERIC DEFAULT 0, wo_count INTEGER DEFAULT 1,
-      operations JSONB NOT NULL DEFAULT '[]', materials JSONB NOT NULL DEFAULT '[]'
-    )
-  `);
-  await pool.query('CREATE INDEX IF NOT EXISTS idx_hist_pn ON infor_history(part_num)');
+  await pool.query(`CREATE TABLE IF NOT EXISTS infor_history (
+    id SERIAL PRIMARY KEY, part_num TEXT NOT NULL, description TEXT NOT NULL,
+    shop TEXT NOT NULL, total_hrs NUMERIC DEFAULT 0, wo_count INTEGER DEFAULT 1,
+    operations JSONB NOT NULL DEFAULT '[]', materials JSONB NOT NULL DEFAULT '[]',
+    wos JSONB NOT NULL DEFAULT '[]'
+  )`);
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_hp ON infor_history(part_num)');
 
-  const { rows } = await pool.query('SELECT COUNT(*) FROM infor_history');
-  if (parseInt(rows[0].count) === 0) {
+  if (count === 0) {
     const hp = path.join(__dirname, 'infor_history.json');
     if (fs.existsSync(hp)) {
       console.log('Importing Infor history...');
       const data = JSON.parse(fs.readFileSync(hp, 'utf8'));
-      const bs = 100;
+      const bs = 50;
       for (let i = 0; i < data.length; i += bs) {
         const batch = data.slice(i, i + bs);
         const vals = []; const params = [];
         batch.forEach((item, j) => {
-          const b = j * 7;
-          vals.push(`($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7})`);
+          const b = j * 8;
+          vals.push(`($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7},$${b+8})`);
           params.push(item.part_num, item.description||'', item.shop||'General',
             item.total_hrs||0, item.wo_count||1,
-            JSON.stringify(item.operations||[]), JSON.stringify(item.materials||[]));
+            JSON.stringify(item.operations||[]), JSON.stringify(item.materials||[]),
+            JSON.stringify(item.wos||[]));
         });
-        await pool.query(`INSERT INTO infor_history (part_num,description,shop,total_hrs,wo_count,operations,materials) VALUES ${vals.join(',')}`, params);
-        if (i % 2000 === 0) console.log('  imported ' + i + '/' + data.length);
+        await pool.query(`INSERT INTO infor_history (part_num,description,shop,total_hrs,wo_count,operations,materials,wos) VALUES ${vals.join(',')}`, params);
+        if (i % 2000 === 0) console.log('  ' + i + '/' + data.length);
       }
       console.log('Imported ' + data.length + ' parts');
     }
@@ -104,7 +99,7 @@ app.get('/api/history/search', async (req, res) => {
   const q = (req.query.q||'').trim();
   if (!q || q.length < 2) return res.json([]);
   const { rows } = await pool.query(
-    'SELECT part_num,description,shop,total_hrs,wo_count,operations,materials FROM infor_history WHERE part_num ILIKE $1 OR description ILIKE $1 ORDER BY total_hrs DESC LIMIT 30',
+    'SELECT part_num,description,shop,total_hrs,wo_count,operations,materials,wos FROM infor_history WHERE part_num ILIKE $1 OR description ILIKE $1 ORDER BY total_hrs DESC LIMIT 30',
     ['%'+q+'%']);
   res.json(rows);
 });
