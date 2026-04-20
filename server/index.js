@@ -144,8 +144,12 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set in environment.' });
   }
 
+  const isPdf = mimeType === 'application/pdf';
   const userContent = [
-    { type: 'image', source: { type: 'base64', media_type: mimeType, data: imageBase64 } },
+    {
+      type: isPdf ? 'document' : 'image',
+      source: { type: 'base64', media_type: mimeType, data: imageBase64 }
+    },
     { type: 'text', text: context ? `Analyze and quote. Estimator context: ${context}` : 'Analyze this drawing and produce the quote JSON.' }
   ];
 
