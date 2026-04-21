@@ -167,7 +167,7 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
       },
       body: JSON.stringify({
         model: 'claude-opus-4-6',
-        max_tokens: 2000,
+        max_tokens: 4000,
         system: DRAWING_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: userContent }]
       })
@@ -195,7 +195,7 @@ app.post('/api/quotes/analyze-drawing', async (req, res) => {
       quote = JSON.parse(cleanText);
     } catch (parseErr) {
       console.error('[analyze-drawing] JSON parse error:', parseErr.message, '\nRaw:', rawText);
-      const preview = rawText.slice(0, 600); return res.status(500).json({ error: 'Parse error. Model said: ' + preview });
+      return res.status(500).json({ error: 'Model returned invalid JSON. Try again or add more context.' });
     }
 
     return res.json(quote);
