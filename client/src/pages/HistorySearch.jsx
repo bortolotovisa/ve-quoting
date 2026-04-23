@@ -81,7 +81,7 @@ function ResultCard({ item }) {
         <div className={styles.cardRight}>
           {hasMats && <span className={styles.matBadge}>BOM</span>}
           <span className={styles.woCount}>{item.wo_count || 1} WO{(item.wo_count||1) !== 1 ? 's' : ''}</span>
-          <span className={styles.totalHrs}>{totalHrs.toFixed(1)} h</span>
+          <span className={styles.totalHrs}>{totalHrs.toFixed(2)} h</span>
           <span className={styles.chevron}>{open ? '▲' : '▼'}</span>
         </div>
       </div>
@@ -125,9 +125,9 @@ function WORow({ wo, isWood }) {
         <span className={styles.woId}>{wo.id}</span>
         <span className={styles.woDate}>{wo.d || '—'}</span>
         <span className={styles.woQty}>{qty}</span>
-        <span className={styles.woHrs}>{wo.h.toFixed(1)} h</span>
-        <span className={styles.woUnit}>{unitHrs.toFixed(1)} h</span>
-        <span className={styles.woMat}>${wo.m.toFixed(0)}</span>
+        <span className={styles.woHrs}>{wo.h.toFixed(2)} h</span>
+        <span className={styles.woUnit}>{unitHrs.toFixed(2)} h</span>
+        <span className={styles.woMat}>${wo.m.toFixed(2)}</span>
         <span className={styles.woChevron}>{expanded ? '−' : '+'}</span>
       </div>
 
@@ -169,15 +169,15 @@ function WORow({ wo, isWood }) {
                     <div className={styles.opBarWrap}>
                       <div className={`${styles.opBar} ${isWood ? styles.barWood : styles.barMetal}`} style={{ width: `${Math.max(pct, 2)}%` }} />
                     </div>
-                    <span className={styles.opHrs}>{op.h.toFixed(1)} h</span>
-                    {qty > 1 && <span className={styles.opPerUnit}>{perUnit.toFixed(1)} h</span>}
+                    <span className={styles.opHrs}>{op.h.toFixed(2)} h</span>
+                    {qty > 1 && <span className={styles.opPerUnit}>{perUnit.toFixed(2)} h</span>}
                   </div>
                 )
               })}
               <div className={styles.opTotalRow}>
                 <span className={styles.opTotalLabel}>Total</span>
-                <span className={styles.opTotalHrs}>{wo.h.toFixed(1)} h</span>
-                {qty > 1 && <span className={styles.opTotalPerUnit}>{unitHrs.toFixed(1)} h/unit</span>}
+                <span className={styles.opTotalHrs}>{wo.h.toFixed(2)} h</span>
+                {qty > 1 && <span className={styles.opTotalPerUnit}>{unitHrs.toFixed(2)} h/unit</span>}
               </div>
             </>
           )}
@@ -203,7 +203,7 @@ function WORow({ wo, isWood }) {
                     <span className={styles.matId}>{m.id}</span>
                     <span className={styles.matDesc}>{m.d}</span>
                     <span className={styles.matQty}>{m.q}</span>
-                    {qty > 1 && <span className={styles.matUnitQty}>{perUnitQty.toFixed(1)}</span>}
+                    {qty > 1 && <span className={styles.matUnitQty}>{perUnitQty.toFixed(2)}</span>}
                     <span className={styles.matCost}>${m.c.toFixed(2)}</span>
                     {qty > 1 && <span className={styles.matUnitCost}>${perUnitCost.toFixed(2)}</span>}
                   </div>
