@@ -4,7 +4,6 @@ import QuoteList from './pages/QuoteList'
 import QuoteEditor from './pages/QuoteEditor'
 import HistorySearch from './pages/HistorySearch'
 import MaterialCalc from './pages/MaterialCalc'
-import DrawingQuote from './pages/DrawingQuote'
 
 export default function App() {
   return (
@@ -14,7 +13,6 @@ export default function App() {
       <Route path="/quote/:id" element={<QuoteEditor />} />
       <Route path="/history" element={<HistorySearch />} />
       <Route path="/materials" element={<MaterialCalc />} />
-      <Route path="/drawing-quote" element={<DrawingQuote />} />
     </Routes>
   )
 }

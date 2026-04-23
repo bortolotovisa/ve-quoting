@@ -37,7 +37,7 @@
   color: var(--text3);
 }
 
-.headerActions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.headerActions { display: flex; gap: 8px; align-items: center; }
 
 .btnNew {
   background: var(--accent);
@@ -68,22 +68,6 @@
   box-shadow: var(--shadow-sm);
 }
 .btnHistory:hover { border-color: var(--border2); color: var(--text); }
-
-/* AI button — purple tint to stand out */
-.btnAI {
-  background: #EEF2FF;
-  color: #4338CA;
-  border: 1px solid #C7D2FE;
-  border-radius: var(--radius);
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all .15s;
-  white-space: nowrap;
-  box-shadow: var(--shadow-sm);
-}
-.btnAI:hover { background: #E0E7FF; border-color: #A5B4FC; color: #3730A3; }
 
 .sectionLabel {
   font-size: 11px;
