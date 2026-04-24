@@ -187,38 +187,68 @@ function WORow({ wo, isWood }) {
           )}
 
           {tab === 'hours' && ops.length > 0 && (
-            <>
-              <div className={styles.colHeaders}>
-                <span className={styles.colOp}>Operation</span>
-                <span className={styles.colBar} />
-                <span className={styles.colEst}>Estimated</span>
-                <span className={styles.colAct}>Actual</span>
-                {qty > 1 && <span className={styles.colPerUnit}>Est/unit</span>}
-                {qty > 1 && <span className={styles.colPerUnit}>Act/unit</span>}
+            <div className={styles.opsTable}>
+              <div className={styles.opsTableHead}>
+                <span className={styles.thOp}>Operation</span>
+                <span className={styles.thEst}>Est.</span>
+                <span className={styles.thAct}>Actual</span>
+                <span className={styles.thVar}>Variance</span>
+                {qty > 1 && <span className={styles.thUnit}>/unit</span>}
               </div>
               {ops.map((op, i) => {
-                const pct = wo.h > 0 ? (op.h / wo.h) * 100 : 0
+                const est = op.e || 0
+                const act = op.h
+                const diff = act - est
+                const pctDiff = est > 0 ? (diff / est) * 100 : null
+                const isOver = est > 0 && diff > 0.1
+                const isUnder = est > 0 && diff < -0.1
+                const hasEst = est > 0
                 return (
-                  <div key={i} className={styles.opRow}>
-                    <span className={styles.opName}>{op.n}</span>
-                    <div className={styles.opBarWrap}>
-                      <div className={`${styles.opBar} ${isWood ? styles.barWood : styles.barMetal}`} style={{ width: `${Math.max(pct, 2)}%` }} />
-                    </div>
-                    <span className={styles.opEst}>{(op.e || 0).toFixed(2)}</span>
-                    <span className={styles.opAct}>{op.h.toFixed(2)}</span>
-                    {qty > 1 && <span className={styles.opPerUnitEst}>{((op.e || 0) / qty).toFixed(2)}</span>}
-                    {qty > 1 && <span className={styles.opPerUnitAct}>{(op.h / qty).toFixed(2)}</span>}
+                  <div key={i} className={`${styles.opsTableRow} ${i % 2 === 0 ? styles.rowEven : ''}`}>
+                    <span className={styles.tdOp}>{op.n}</span>
+                    <span className={styles.tdEst}>{hasEst ? est.toFixed(2) : <span className={styles.noEst}>—</span>}</span>
+                    <span className={styles.tdAct}>{act.toFixed(2)}</span>
+                    <span className={`${styles.tdVar} ${isOver ? styles.varOver : isUnder ? styles.varUnder : styles.varNeutral}`}>
+                      {!hasEst ? <span className={styles.noEst}>—</span> : (
+                        <>
+                          <span className={styles.varArrow}>{isOver ? '▲' : isUnder ? '▼' : '='}</span>
+                          <span className={styles.varHrs}>{Math.abs(diff).toFixed(2)}h</span>
+                          {pctDiff !== null && (
+                            <span className={styles.varPct}>{Math.abs(Math.round(pctDiff))}%</span>
+                          )}
+                        </>
+                      )}
+                    </span>
+                    {qty > 1 && <span className={styles.tdUnit}>{(act / qty).toFixed(2)}</span>}
                   </div>
                 )
               })}
-              <div className={styles.opTotalRow}>
-                <span className={styles.opTotalLabel}>Total</span>
-                <span className={styles.opTotalEst}>{(wo.e || 0).toFixed(2)} h</span>
-                <span className={styles.opTotalAct}>{wo.h.toFixed(2)} h</span>
-                {qty > 1 && <span className={styles.opTotalPerUnitEst}>{unitEst.toFixed(2)}</span>}
-                {qty > 1 && <span className={styles.opTotalPerUnitAct}>{unitHrs.toFixed(2)} h/u</span>}
+              <div className={styles.opsTableFoot}>
+                <span className={styles.tdOp}>Total</span>
+                <span className={styles.tdEst}>{(wo.e || 0) > 0 ? (wo.e).toFixed(2) : '—'}</span>
+                <span className={styles.tdActBold}>{wo.h.toFixed(2)} h</span>
+                {(() => {
+                  const totalEst = wo.e || 0
+                  const totalAct = wo.h
+                  const totalDiff = totalAct - totalEst
+                  const totalPct = totalEst > 0 ? (totalDiff / totalEst) * 100 : null
+                  const isOver = totalEst > 0 && totalDiff > 0.1
+                  const isUnder = totalEst > 0 && totalDiff < -0.1
+                  return (
+                    <span className={`${styles.tdVar} ${isOver ? styles.varOver : isUnder ? styles.varUnder : styles.varNeutral}`}>
+                      {totalEst > 0 ? (
+                        <>
+                          <span className={styles.varArrow}>{isOver ? '▲' : isUnder ? '▼' : '='}</span>
+                          <span className={styles.varHrs}>{Math.abs(totalDiff).toFixed(2)}h</span>
+                          {totalPct !== null && <span className={styles.varPct}>{Math.abs(Math.round(totalPct))}%</span>}
+                        </>
+                      ) : '—'}
+                    </span>
+                  )
+                })()}
+                {qty > 1 && <span className={styles.tdUnitBold}>{unitHrs.toFixed(2)} h/u</span>}
               </div>
-            </>
+            </div>
           )}
           {tab === 'hours' && ops.length === 0 && <div className={styles.noData}>No operation hours recorded</div>}
 
