@@ -3,8 +3,31 @@
 .backBtn { background:none; border:none; font-size:13px; color:var(--text3); cursor:pointer; padding:0; transition:color .15s; }
 .backBtn:hover { color:var(--text); }
 .header { margin-bottom: 1.5rem; }
+.headerRow { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
 .title { font-size:24px; font-weight:600; color:var(--text); letter-spacing:-.03em; margin-bottom:4px; }
 .sub { font-family:var(--font-mono); font-size:11px; color:var(--text3); }
+
+.closedToggle {
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer; flex-shrink: 0;
+  margin-top: 4px;
+}
+.toggleInput { display: none; }
+.toggleTrack {
+  position: relative; width: 34px; height: 20px;
+  background: var(--border2); border-radius: 10px;
+  transition: background .2s; flex-shrink: 0;
+}
+.toggleOn { background: var(--accent); }
+.toggleThumb {
+  position: absolute; top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  background: #fff; border-radius: 50%;
+  transition: transform .2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggleOn .toggleThumb { transform: translateX(14px); }
+.toggleLabel { font-size: 12px; font-weight: 500; color: var(--text2); white-space: nowrap; }
 .searchWrap { position:relative; margin-bottom:1.5rem; }
 .searchInput { width:100%; font-size:14px; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg2); color:var(--text); box-shadow:var(--shadow); transition:border-color .15s, box-shadow .15s; }
 .searchInput:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.1), var(--shadow); outline:none; }

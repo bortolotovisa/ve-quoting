@@ -133,14 +133,46 @@ export default function QuoteEditor() {
               <div key={item.id} className={styles.sumRow}>
                 <span className={`${styles.shopDot} ${item.shop === 'metal' ? styles.dotMetal : styles.dotWood}`} />
                 <span className={styles.sumDesc}>{item.desc || `Item ${idx + 1}`}{item.qty > 1 ? ` ×${item.qty}` : ''}</span>
-                <span className={styles.sumInfo}>{ih.toFixed(1)}h/unit</span>
-                <span className={styles.sumHrs}>{lh.toFixed(1)} h</span>
+                <span className={styles.sumInfo}>{ih.toFixed(2)}h/unit</span>
+                <span className={styles.sumHrs}>{lh.toFixed(2)} h</span>
               </div>
             )
           })}
+          <div className={styles.shopBreakdown}>
+            {(() => {
+              const metalHrs = +items.reduce((s, item) => {
+                if (item.shop !== 'metal') return s
+                const { totalHrs: ih } = calcItem(item)
+                return s + ih * (item.qty || 1)
+              }, 0).toFixed(2)
+              const woodHrs = +items.reduce((s, item) => {
+                if (item.shop !== 'wood') return s
+                const { totalHrs: ih } = calcItem(item)
+                return s + ih * (item.qty || 1)
+              }, 0).toFixed(2)
+              return (
+                <>
+                  {metalHrs > 0 && (
+                    <div className={styles.shopLine}>
+                      <span className={`${styles.shopDot} ${styles.dotMetal}`} />
+                      <span className={styles.shopName}>Metal shop</span>
+                      <span className={styles.shopHrs}>{metalHrs.toFixed(2)} h</span>
+                    </div>
+                  )}
+                  {woodHrs > 0 && (
+                    <div className={styles.shopLine}>
+                      <span className={`${styles.shopDot} ${styles.dotWood}`} />
+                      <span className={styles.shopName}>Wood shop</span>
+                      <span className={styles.shopHrs}>{woodHrs.toFixed(2)} h</span>
+                    </div>
+                  )}
+                </>
+              )
+            })()}
+          </div>
           <div className={styles.sumTotal}>
             <span>Total labour estimated</span>
-            <span className={styles.totalHrs}>{totalHrs.toFixed(1)} h</span>
+            <span className={styles.totalHrs}>{totalHrs.toFixed(2)} h</span>
           </div>
           <p className={styles.sumNote}>+ material cost (external) · apply Infor rates to these hours</p>
         </div>

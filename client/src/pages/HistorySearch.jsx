@@ -13,6 +13,7 @@ export default function HistorySearch() {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [closedOnly, setClosedOnly] = useState(false)
 
   const doSearch = useCallback(debounce(async (q) => {
     if (!q || q.length < 2) { setResults([]); setSearched(false); return }
@@ -27,25 +28,51 @@ export default function HistorySearch() {
   function handleInput(e) { setQuery(e.target.value); doSearch(e.target.value) }
   function quickSearch(t) { setQuery(t); doSearch(t) }
 
+  const filteredResults = closedOnly
+    ? results.map(item => {
+        const wos = Array.isArray(item.wos) ? item.wos : JSON.parse(item.wos || '[]')
+        const closedWos = wos.filter(w => w.s === 'C')
+        const totalHrs = +closedWos.reduce((s, w) => s + (w.h || 0), 0).toFixed(2)
+        return { ...item, wos: closedWos, total_hrs: totalHrs, wo_count: closedWos.length }
+      }).filter(item => item.wo_count > 0)
+    : results
+
   return (
     <div className={styles.page}>
       <div className={styles.topbar}>
         <button className={styles.backBtn} onClick={() => nav('/')}>← All quotes</button>
       </div>
       <div className={styles.header}>
-        <div className={styles.title}>Infor history</div>
-        <p className={styles.sub}>16,263 parts · estimated vs actual hours · click a WO for per-unit breakdown</p>
+        <div className={styles.headerRow}>
+          <div>
+            <div className={styles.title}>Infor history</div>
+            <p className={styles.sub}>16,263 parts · estimated vs actual hours · click a WO for per-unit breakdown</p>
+          </div>
+          <label className={styles.closedToggle}>
+            <input type="checkbox" checked={closedOnly} onChange={e => setClosedOnly(e.target.checked)} className={styles.toggleInput} />
+            <span className={`${styles.toggleTrack} ${closedOnly ? styles.toggleOn : ''}`}>
+              <span className={styles.toggleThumb} />
+            </span>
+            <span className={styles.toggleLabel}>Closed WOs only</span>
+          </label>
+        </div>
       </div>
       <div className={styles.searchWrap}>
         <input className={styles.searchInput} value={query} onChange={handleInput}
           placeholder="Part number or description — e.g. 108630 or curved rack..." autoFocus />
         {loading && <div className={styles.spinner} />}
       </div>
-      {searched && results.length === 0 && <div className={styles.empty}>No parts found for "{query}"</div>}
-      {results.length > 0 && (
+      {searched && filteredResults.length === 0 && (
+        <div className={styles.empty}>
+          {results.length > 0 && closedOnly
+            ? `All WOs for "${query}" are still open — try disabling "Closed only"`
+            : `No parts found for "${query}"`}
+        </div>
+      )}
+      {filteredResults.length > 0 && (
         <div className={styles.results}>
-          {results.map((item, i) => <ResultCard key={i} item={item} />)}
-          {results.length === 30 && <p className={styles.hint}>Showing top 30 — refine your search</p>}
+          {filteredResults.map((item, i) => <ResultCard key={i} item={item} />)}
+          {filteredResults.length === 30 && <p className={styles.hint}>Showing top 30 — refine your search</p>}
         </div>
       )}
       {!searched && !loading && (

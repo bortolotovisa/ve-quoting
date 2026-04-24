@@ -187,3 +187,15 @@
 .sumHrs  { font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--text); min-width:52px; text-align:right; }
 .sumTotal { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:13px; color:var(--text2); }
 .sumNote { font-family:var(--font-mono); font-size:11px; color:var(--text3); margin-top:6px; }
+
+.shopBreakdown {
+  display: flex; flex-direction: column; gap: 4px;
+  margin: 8px 0; padding: 8px 0;
+  border-top: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+}
+.shopLine {
+  display: flex; align-items: center; gap: 8px;
+}
+.shopName { font-size: 12px; color: var(--text2); flex: 1; }
+.shopHrs { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text); }

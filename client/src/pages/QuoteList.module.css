@@ -70,13 +70,50 @@
 .btnHistory:hover { border-color: var(--border2); color: var(--text); }
 
 .sectionLabel {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text3);
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  margin-bottom: 8px;
+  font-size: 11px; font-weight: 500; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px;
 }
+
+.searchBar {
+  position: relative;
+  margin-bottom: 10px;
+}
+.searchInput {
+  width: 100%; font-size: 13px;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg2);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color .15s, box-shadow .15s;
+}
+.searchInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  outline: none;
+}
+.searchInput::placeholder { color: var(--text3); }
+.clearBtn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 16px; color: var(--text3);
+  cursor: pointer; line-height: 1; padding: 0 2px;
+  transition: color .15s;
+}
+.clearBtn:hover { color: var(--text); }
+
+.clientChips {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.chip {
+  font-size: 12px; padding: 3px 12px;
+  border: 1px solid var(--border); border-radius: 20px;
+  background: var(--bg2); color: var(--text2);
+  cursor: pointer; transition: all .15s;
+  box-shadow: var(--shadow-sm);
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.chipActive { background: var(--accent-bg) !important; color: var(--accent) !important; border-color: var(--accent) !important; }
 
 .empty {
   text-align: center;
