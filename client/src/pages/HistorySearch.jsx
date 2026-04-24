@@ -34,7 +34,7 @@ export default function HistorySearch() {
       </div>
       <div className={styles.header}>
         <div className={styles.title}>Infor history</div>
-        <p className={styles.sub}>16,263 parts · click a WO to see total and per-unit breakdown</p>
+        <p className={styles.sub}>16,263 parts · estimated vs actual hours · click a WO for per-unit breakdown</p>
       </div>
       <div className={styles.searchWrap}>
         <input className={styles.searchInput} value={query} onChange={handleInput}
@@ -68,6 +68,7 @@ function ResultCard({ item }) {
   const isWood = item.shop === 'Wood'
   const wos = Array.isArray(item.wos) ? item.wos : JSON.parse(item.wos || '[]')
   const totalHrs = parseFloat(item.total_hrs)
+  const totalEst = parseFloat(item.total_est || 0)
   const hasMats = wos.some(w => w.mats && w.mats.length > 0)
 
   return (
@@ -94,7 +95,8 @@ function ResultCard({ item }) {
             <span className={styles.woColId}>WO</span>
             <span className={styles.woColDate}>Date</span>
             <span className={styles.woColQty}>Qty</span>
-            <span className={styles.woColTotal}>Total</span>
+            <span className={styles.woColEst}>Est.</span>
+            <span className={styles.woColAct}>Actual</span>
             <span className={styles.woColUnit}>/unit</span>
             <span className={styles.woColMat}>Material</span>
             <span style={{width:20}} />
@@ -113,8 +115,8 @@ function WORow({ wo, isWood }) {
   const mats = wo.mats || []
   const hasMats = mats.length > 0
   const qty = wo.q || 1
-  const unitHrs = qty > 0 ? (wo.h / qty) : wo.h
-  const unitMat = qty > 0 ? (wo.m / qty) : wo.m
+  const unitHrs = wo.h / qty
+  const unitEst = (wo.e || 0) / qty
 
   return (
     <div className={styles.woCard}>
@@ -125,8 +127,9 @@ function WORow({ wo, isWood }) {
         <span className={styles.woId}>{wo.id}</span>
         <span className={styles.woDate}>{wo.d || '—'}</span>
         <span className={styles.woQty}>{qty}</span>
-        <span className={styles.woHrs}>{wo.h.toFixed(2)} h</span>
-        <span className={styles.woUnit}>{unitHrs.toFixed(2)} h</span>
+        <span className={styles.woEst}>{(wo.e || 0).toFixed(2)}</span>
+        <span className={styles.woAct}>{wo.h.toFixed(2)}</span>
+        <span className={styles.woUnit}>{unitHrs.toFixed(2)}</span>
         <span className={styles.woMat}>${wo.m.toFixed(2)}</span>
         <span className={styles.woChevron}>{expanded ? '−' : '+'}</span>
       </div>
@@ -135,7 +138,13 @@ function WORow({ wo, isWood }) {
         <div className={styles.woDetail}>
           {qty > 1 && (
             <div className={styles.qtyBanner}>
-              This WO produced <strong>{qty} units</strong> — values below show total and per unit
+              WO quantity: <strong>{qty} units</strong> — per unit values use this qty
+              {wo.s !== 'C' && <span className={styles.qtyWarning}> · WO not closed — actual hours may be incomplete</span>}
+            </div>
+          )}
+          {qty === 1 && wo.s !== 'C' && (
+            <div className={styles.qtyBanner}>
+              <span className={styles.qtyWarning}>WO not closed — actual hours may be incomplete</span>
             </div>
           )}
 
@@ -152,65 +161,62 @@ function WORow({ wo, isWood }) {
 
           {tab === 'hours' && ops.length > 0 && (
             <>
-              {qty > 1 && (
-                <div className={styles.colHeaders}>
-                  <span className={styles.colOp}>Operation</span>
-                  <span className={styles.colBar} />
-                  <span className={styles.colTotal}>Total</span>
-                  <span className={styles.colPerUnit}>/unit</span>
-                </div>
-              )}
+              <div className={styles.colHeaders}>
+                <span className={styles.colOp}>Operation</span>
+                <span className={styles.colBar} />
+                <span className={styles.colEst}>Estimated</span>
+                <span className={styles.colAct}>Actual</span>
+                {qty > 1 && <span className={styles.colPerUnit}>Est/unit</span>}
+                {qty > 1 && <span className={styles.colPerUnit}>Act/unit</span>}
+              </div>
               {ops.map((op, i) => {
                 const pct = wo.h > 0 ? (op.h / wo.h) * 100 : 0
-                const perUnit = qty > 0 ? (op.h / qty) : op.h
                 return (
                   <div key={i} className={styles.opRow}>
                     <span className={styles.opName}>{op.n}</span>
                     <div className={styles.opBarWrap}>
                       <div className={`${styles.opBar} ${isWood ? styles.barWood : styles.barMetal}`} style={{ width: `${Math.max(pct, 2)}%` }} />
                     </div>
-                    <span className={styles.opHrs}>{op.h.toFixed(2)} h</span>
-                    {qty > 1 && <span className={styles.opPerUnit}>{perUnit.toFixed(2)} h</span>}
+                    <span className={styles.opEst}>{(op.e || 0).toFixed(2)}</span>
+                    <span className={styles.opAct}>{op.h.toFixed(2)}</span>
+                    {qty > 1 && <span className={styles.opPerUnitEst}>{((op.e || 0) / qty).toFixed(2)}</span>}
+                    {qty > 1 && <span className={styles.opPerUnitAct}>{(op.h / qty).toFixed(2)}</span>}
                   </div>
                 )
               })}
               <div className={styles.opTotalRow}>
                 <span className={styles.opTotalLabel}>Total</span>
-                <span className={styles.opTotalHrs}>{wo.h.toFixed(2)} h</span>
-                {qty > 1 && <span className={styles.opTotalPerUnit}>{unitHrs.toFixed(2)} h/unit</span>}
+                <span className={styles.opTotalEst}>{(wo.e || 0).toFixed(2)} h</span>
+                <span className={styles.opTotalAct}>{wo.h.toFixed(2)} h</span>
+                {qty > 1 && <span className={styles.opTotalPerUnitEst}>{unitEst.toFixed(2)}</span>}
+                {qty > 1 && <span className={styles.opTotalPerUnitAct}>{unitHrs.toFixed(2)} h/u</span>}
               </div>
             </>
           )}
-          {tab === 'hours' && ops.length === 0 && (
-            <div className={styles.noData}>No operation hours recorded</div>
-          )}
+          {tab === 'hours' && ops.length === 0 && <div className={styles.noData}>No operation hours recorded</div>}
 
           {tab === 'materials' && mats.length > 0 && (
             <div className={styles.matList}>
               <div className={styles.matHeader}>
                 <span className={styles.matColId}>Part ID</span>
                 <span className={styles.matColDesc}>Description</span>
-                <span className={styles.matColQty}>{qty > 1 ? 'Total qty' : 'Qty'}</span>
+                <span className={styles.matColQty}>{qty > 1 ? 'Total' : 'Qty'}</span>
                 {qty > 1 && <span className={styles.matColUnit}>/unit</span>}
-                <span className={styles.matColCost}>{qty > 1 ? 'Total cost' : 'Cost'}</span>
-                {qty > 1 && <span className={styles.matColUnitCost}>/unit</span>}
+                <span className={styles.matColCost}>{qty > 1 ? 'Total $' : 'Cost'}</span>
+                {qty > 1 && <span className={styles.matColUnitCost}>$/unit</span>}
               </div>
-              {mats.map((m, i) => {
-                const perUnitQty = qty > 0 ? (m.q / qty) : m.q
-                const perUnitCost = qty > 0 ? (m.c / qty) : m.c
-                return (
-                  <div key={i} className={styles.matRow}>
-                    <span className={styles.matId}>{m.id}</span>
-                    <span className={styles.matDesc}>{m.d}</span>
-                    <span className={styles.matQty}>{m.q}</span>
-                    {qty > 1 && <span className={styles.matUnitQty}>{perUnitQty.toFixed(2)}</span>}
-                    <span className={styles.matCost}>${m.c.toFixed(2)}</span>
-                    {qty > 1 && <span className={styles.matUnitCost}>${perUnitCost.toFixed(2)}</span>}
-                  </div>
-                )
-              })}
+              {mats.map((m, i) => (
+                <div key={i} className={styles.matRow}>
+                  <span className={styles.matId}>{m.id}</span>
+                  <span className={styles.matDesc}>{m.d}</span>
+                  <span className={styles.matQty}>{m.q}</span>
+                  {qty > 1 && <span className={styles.matUnitQty}>{(m.q / qty).toFixed(2)}</span>}
+                  <span className={styles.matCost}>${m.c.toFixed(2)}</span>
+                  {qty > 1 && <span className={styles.matUnitCost}>${(m.c / qty).toFixed(2)}</span>}
+                </div>
+              ))}
               <div className={styles.matTotal}>
-                <span>Material total: ${mats.reduce((s, m) => s + m.c, 0).toFixed(2)}</span>
+                <span>Total: ${mats.reduce((s, m) => s + m.c, 0).toFixed(2)}</span>
                 {qty > 1 && <span className={styles.matTotalUnit}> · ${(mats.reduce((s, m) => s + m.c, 0) / qty).toFixed(2)}/unit</span>}
               </div>
             </div>

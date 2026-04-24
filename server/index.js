@@ -24,7 +24,7 @@ async function initDB() {
 
   // Recreate history if schema changed
   try {
-    const r = await pool.query("SELECT column_name FROM information_schema.columns WHERE table_name='infor_history' AND column_name='wos'");
+    const r = await pool.query("SELECT column_name FROM information_schema.columns WHERE table_name='infor_history' AND column_name='total_est'");
     if (r.rows.length === 0) throw new Error('missing wos column');
   } catch(e) {
     await pool.query('DROP TABLE IF EXISTS infor_history');
@@ -32,8 +32,8 @@ async function initDB() {
 
   await pool.query(`CREATE TABLE IF NOT EXISTS infor_history (
     id SERIAL PRIMARY KEY, part_num TEXT NOT NULL, description TEXT NOT NULL,
-    shop TEXT NOT NULL, total_hrs NUMERIC DEFAULT 0, wo_count INTEGER DEFAULT 1,
-    wos JSONB NOT NULL DEFAULT '[]'
+    shop TEXT NOT NULL, total_hrs NUMERIC DEFAULT 0, total_est NUMERIC DEFAULT 0,
+    wo_count INTEGER DEFAULT 1, wos JSONB NOT NULL DEFAULT '[]'
   )`);
   await pool.query('CREATE INDEX IF NOT EXISTS idx_hp ON infor_history(part_num)');
 
@@ -48,12 +48,12 @@ async function initDB() {
         const batch = data.slice(i, i + bs);
         const vals = []; const params = [];
         batch.forEach((item, j) => {
-          const b = j * 6;
-          vals.push(`($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6})`);
+          const b = j * 7;
+          vals.push(`($${b+1},$${b+2},$${b+3},$${b+4},$${b+5},$${b+6},$${b+7})`);
           params.push(item.part_num, item.description||'', item.shop||'General',
-            item.total_hrs||0, item.wo_count||1, JSON.stringify(item.wos||[]));
+            item.total_hrs||0, item.total_est||0, item.wo_count||1, JSON.stringify(item.wos||[]));
         });
-        await pool.query(`INSERT INTO infor_history (part_num,description,shop,total_hrs,wo_count,wos) VALUES ${vals.join(',')}`, params);
+        await pool.query(`INSERT INTO infor_history (part_num,description,shop,total_hrs,total_est,wo_count,wos) VALUES ${vals.join(',')}`, params);
         if (i % 2000 === 0) console.log('  ' + i + '/' + data.length);
       }
       console.log('Imported ' + data.length + ' parts');
@@ -94,7 +94,7 @@ app.get('/api/history/search', async (req, res) => {
   const q = (req.query.q||'').trim();
   if (!q || q.length < 2) return res.json([]);
   const { rows } = await pool.query(
-    'SELECT part_num,description,shop,total_hrs,wo_count,wos FROM infor_history WHERE part_num ILIKE $1 OR description ILIKE $1 ORDER BY total_hrs DESC LIMIT 30',
+    'SELECT part_num,description,shop,total_hrs,total_est,wo_count,wos FROM infor_history WHERE part_num ILIKE $1 OR description ILIKE $1 ORDER BY total_hrs DESC LIMIT 30',
     ['%'+q+'%']);
   res.json(rows);
 });
