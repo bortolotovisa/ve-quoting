@@ -1,66 +1,72 @@
 /* ============================================================
-   HISTORY SEARCH — Modern SaaS layout
+   HistorySearch.module.css
+   Modern SaaS redesign — Plus Jakarta Sans + DM Mono
    ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap');
 
 .page {
-  --bg: #F8F9FB;
-  --surface: #FFF;
-  --surface2: #F4F5F8;
-  --surface3: #FAFBFC;
-  --border: #E5E7EB;
-  --border2: #D1D5DB;
-  --text: #111827;
-  --text2: #4B5563;
-  --text3: #9CA3AF;
-  --blue: #2563EB;
-  --blue-lt: #EFF6FF;
-  --blue-bdr: #BFDBFE;
-  --green: #059669;
-  --green-lt: #ECFDF5;
-  --green-bdr: #6EE7B7;
-  --red: #DC2626;
-  --red-lt: #FEF2F2;
-  --red-bdr: #FCA5A5;
-  --amber: #D97706;
-  --amber-lt: #FFFBEB;
-  --amber-bdr: #FDE68A;
+  --ve-bg: #F8F9FB;
+  --ve-surface: #FFFFFF;
+  --ve-surface2: #F4F5F8;
+  --ve-surface3: #FAFBFC;
+  --ve-border: #E5E7EB;
+  --ve-border-strong: #D1D5DB;
+  --ve-text: #111827;
+  --ve-text2: #4B5563;
+  --ve-text3: #9CA3AF;
+  --ve-blue: #2563EB;
+  --ve-blue-lt: #EFF6FF;
+  --ve-blue-bdr: #BFDBFE;
+  --ve-green: #059669;
+  --ve-green-lt: #ECFDF5;
+  --ve-green-bdr: #6EE7B7;
+  --ve-red: #DC2626;
+  --ve-red-lt: #FEF2F2;
+  --ve-red-bdr: #FCA5A5;
+  --ve-amber: #D97706;
+  --ve-amber-lt: #FFFBEB;
+  --ve-amber-bdr: #FDE68A;
 
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--bg);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--ve-bg);
+  color: var(--ve-text);
   min-height: 100vh;
-  padding: 28px 32px;
-  color: var(--text);
+  padding: 24px 28px;
   -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* ============================================================
-   PAGE HEADER
-   ============================================================ */
-.pageHeader {
-  margin-bottom: 18px;
+/* ============ PAGE HEADER ============ */
+.pageHd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
 }
 
 .pageTitle {
   font-size: 22px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ve-text);
   letter-spacing: -0.02em;
-  margin: 0 0 4px 0;
-}
-
-.pageSub {
-  font-family: 'DM Mono', ui-monospace, monospace;
-  font-size: 12px;
-  color: var(--text3);
   margin: 0;
 }
 
-/* ============================================================
-   SEARCH BAR
-   ============================================================ */
-.search {
+.pageSub {
+  font-size: 12px;
+  color: var(--ve-text3);
+  font-family: 'DM Mono', monospace;
+  margin: 2px 0 0 0;
+}
+
+/* ============ SEARCH BAR ============ */
+.searchBar {
   position: relative;
-  margin-bottom: 12px;
+  width: 100%;
 }
 
 .searchIcon {
@@ -68,40 +74,104 @@
   left: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--text3);
+  color: var(--ve-text3);
   pointer-events: none;
+  width: 14px;
+  height: 14px;
 }
 
-.search input {
+.searchInput {
   width: 100%;
-  font-family: inherit;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 14px;
-  padding: 11px 14px 11px 38px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface);
-  color: var(--text);
+  padding: 11px 38px 11px 38px;
+  border: 1px solid var(--ve-border);
+  border-radius: 8px;
+  background: var(--ve-surface);
+  color: var(--ve-text);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.search input:focus {
-  border-color: var(--blue);
+.searchInput:focus {
+  border-color: var(--ve-blue);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.search input::placeholder {
-  color: var(--text3);
+.searchInput::placeholder {
+  color: var(--ve-text3);
 }
 
-/* ============================================================
-   FILTERS
-   ============================================================ */
+.searchClear {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--ve-surface2);
+  border: none;
+  color: var(--ve-text3);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: sans-serif;
+}
+.searchClear:hover { color: var(--ve-text); background: var(--ve-border); }
+
+/* ============ QUICK ACCESS ============ */
+.quickAccess {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.chipGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chipGroupLbl {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ve-text3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-right: 4px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ve-text2);
+  padding: 5px 11px;
+  background: var(--ve-surface);
+  border: 1px solid var(--ve-border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--ve-blue-bdr); color: var(--ve-blue); background: var(--ve-blue-lt); }
+.chipRecent { color: var(--ve-text2); }
+.chipRecent svg { color: var(--ve-text3); }
+
+/* ============ FILTERS ============ */
 .filters {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
 .toggle {
@@ -109,21 +179,23 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  user-select: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .toggleTrack {
   width: 32px;
   height: 18px;
   border-radius: 99px;
-  background: var(--border2);
+  background: var(--ve-border-strong);
   position: relative;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
-.toggleTrack.toggleOn {
-  background: var(--blue);
-}
+.toggleOn { background: var(--ve-blue); }
 
 .toggleThumb {
   position: absolute;
@@ -132,41 +204,49 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #FFF;
+  background: #fff;
   transition: transform 0.2s;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-
-.toggleOn .toggleThumb {
-  transform: translateX(14px);
-}
+.toggleOn .toggleThumb { transform: translateX(14px); }
 
 .toggleLabel {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text2);
+  color: var(--ve-text2);
 }
 
 .resultsCount {
-  font-family: 'DM Mono', ui-monospace, monospace;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--ve-text3);
+  font-family: 'DM Mono', monospace;
   margin-left: auto;
 }
 
-/* ============================================================
-   PART CARD
-   ============================================================ */
+/* ============ RESULTS LIST ============ */
 .list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 20px;
+  color: var(--ve-text3);
+  text-align: center;
+}
+.empty p { font-size: 14px; font-weight: 500; color: var(--ve-text2); margin: 4px 0; }
+.empty span { font-size: 12px; }
+
+/* ============ CARD ============ */
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--ve-surface);
+  border: 1px solid var(--ve-border);
+  border-radius: 10px;
   overflow: hidden;
 }
 
@@ -179,13 +259,10 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-
-.cardRow:hover {
-  background: var(--surface2);
-}
+.cardRow:hover { background: var(--ve-surface3); }
 
 .shopPill {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 10px;
   font-weight: 600;
   padding: 3px 9px;
@@ -193,34 +270,26 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+.shopMetal { background: var(--ve-blue-lt); color: var(--ve-blue); }
+.shopWood { background: var(--ve-green-lt); color: var(--ve-green); }
 
-.shopMetal {
-  background: var(--blue-lt);
-  color: var(--blue);
-}
-
-.shopWood {
-  background: var(--green-lt);
-  color: var(--green);
-}
-
-.partnum {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.partNum {
+  font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: var(--text3);
+  color: var(--ve-text3);
   font-weight: 500;
 }
 
 .partName {
   font-size: 14px;
   font-weight: 500;
-  color: var(--text);
+  color: var(--ve-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.metaGroup {
+.partMeta {
   display: flex;
   align-items: center;
   gap: 14px;
@@ -232,9 +301,9 @@
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 20px;
-  background: var(--amber-lt);
-  color: var(--amber);
-  font-family: 'DM Mono', ui-monospace, monospace;
+  background: var(--ve-amber-lt);
+  color: var(--ve-amber);
+  font-family: 'DM Mono', monospace;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -248,43 +317,40 @@
 
 .metaLbl {
   font-size: 10px;
-  color: var(--text3);
-  font-family: 'DM Mono', ui-monospace, monospace;
+  color: var(--ve-text3);
+  font-family: 'DM Mono', monospace;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-weight: 500;
 }
 
 .metaVal {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ve-text);
 }
 
 .chevron {
-  color: var(--text3);
+  width: 14px;
+  height: 14px;
+  color: var(--ve-text3);
   transition: transform 0.2s;
   flex-shrink: 0;
 }
+.chevronOpen { transform: rotate(180deg); }
 
-.chevronOpen {
-  transform: rotate(180deg);
+/* ============ WO LIST ============ */
+.wos {
+  border-top: 1px solid var(--ve-border);
+  background: var(--ve-surface3);
+  padding: 14px 18px 16px;
 }
 
-/* ============================================================
-   WORK ORDERS LIST
-   ============================================================ */
-.wosWrap {
-  border-top: 1px solid var(--border);
-  background: var(--surface3);
-  padding: 14px 18px;
-}
-
-.wosLabel {
+.wosHd {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text3);
+  color: var(--ve-text3);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin-bottom: 10px;
@@ -293,64 +359,55 @@
   align-items: center;
 }
 
-.wosHint {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.wosHdHint {
+  font-family: 'DM Mono', monospace;
   text-transform: none;
   letter-spacing: 0;
   font-weight: 400;
-  font-size: 10px;
+  color: var(--ve-text3);
+  font-size: 11px;
 }
 
-.woTableHead {
+.woTableHd {
   display: grid;
-  grid-template-columns: 74px 96px 92px 50px 60px 60px 64px 72px 24px;
+  grid-template-columns: 80px 100px 100px 50px 60px 60px 64px 76px 28px;
   padding: 6px 14px;
   font-size: 10px;
   font-weight: 600;
-  color: var(--text3);
+  color: var(--ve-text3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
+  gap: 6px;
 }
-
-.woTableHead span {
-  text-align: right;
-}
-
-.woTableHead span:nth-child(1),
-.woTableHead span:nth-child(2),
-.woTableHead span:nth-child(3) {
-  text-align: left;
-}
+.woTableHd > span { text-align: right; }
+.woTableHd > span:nth-child(1),
+.woTableHd > span:nth-child(2),
+.woTableHd > span:nth-child(3) { text-align: left; }
 
 .woCard {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--ve-surface);
+  border: 1px solid var(--ve-border);
   border-radius: 8px;
   margin-bottom: 6px;
   overflow: hidden;
 }
-
-.woCard:last-child {
-  margin-bottom: 0;
-}
+.woCard:last-child { margin-bottom: 0; }
 
 .woRow {
   display: grid;
-  grid-template-columns: 74px 96px 92px 50px 60px 60px 64px 72px 24px;
+  grid-template-columns: 80px 100px 100px 50px 60px 60px 64px 76px 28px;
   padding: 11px 14px;
   cursor: pointer;
   transition: background 0.12s;
   align-items: center;
   font-size: 12px;
+  gap: 6px;
 }
-
-.woRow:hover {
-  background: var(--surface2);
-}
+.woRow:hover { background: var(--ve-surface3); }
 
 .status {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 10px;
   font-weight: 600;
   padding: 2px 8px;
@@ -361,127 +418,81 @@
   display: inline-block;
   width: fit-content;
 }
-
-.statusClosed {
-  background: var(--green-lt);
-  color: var(--green);
-}
-
-.statusOpen {
-  background: var(--surface2);
-  color: var(--text3);
-}
-
-.statusRel {
-  background: var(--amber-lt);
-  color: var(--amber);
-}
+.statusClosed { background: var(--ve-green-lt); color: var(--ve-green); }
+.statusOpen { background: var(--ve-surface2); color: var(--ve-text3); }
+.statusRel { background: var(--ve-amber-lt); color: var(--ve-amber); }
 
 .woId {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ve-text);
 }
 
 .woDate {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: var(--text3);
+  color: var(--ve-text3);
 }
 
 .woNum {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
   text-align: right;
 }
-
-.woQty {
-  color: var(--blue);
-  font-weight: 600;
-}
-
-.woEst {
-  color: var(--text3);
-}
-
-.woAct {
-  color: var(--text);
-  font-weight: 600;
-}
-
-.woUnit {
-  color: var(--blue);
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.woMat {
-  color: var(--text2);
-}
+.woQty { color: var(--ve-blue); font-weight: 600; }
+.woEst { color: var(--ve-text3); }
+.woAct { color: var(--ve-text); font-weight: 600; }
+.woUnit { color: var(--ve-blue); font-weight: 700; font-size: 13px; }
+.woMat { color: var(--ve-text2); }
 
 .woToggle {
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 5px;
+  border: 1px solid var(--ve-border);
+  border-radius: 4px;
   width: 22px;
   height: 22px;
   font-size: 14px;
-  color: var(--text3);
+  color: var(--ve-text3);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
-  font-family: inherit;
+  font-family: 'Plus Jakarta Sans', sans-serif;
   line-height: 1;
   padding: 0;
 }
+.woToggle:hover { border-color: var(--ve-blue); color: var(--ve-blue); }
 
-.woToggle:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-}
-
-/* ============================================================
-   WO DETAIL (expanded)
-   ============================================================ */
+/* ============ WO DETAIL ============ */
 .woDetail {
-  border-top: 1px solid var(--border);
-  background: var(--surface2);
+  border-top: 1px solid var(--ve-border);
+  background: var(--ve-surface3);
   padding: 14px;
 }
 
 .qtyBanner {
   font-size: 12px;
-  color: var(--text2);
-  background: var(--blue-lt);
-  border: 1px solid var(--blue-bdr);
-  border-radius: 8px;
+  color: var(--ve-text2);
+  background: var(--ve-blue-lt);
+  border: 1px solid var(--ve-blue-bdr);
+  border-radius: 6px;
   padding: 9px 12px;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
-.qtyBanner svg {
-  flex-shrink: 0;
-  color: var(--blue);
-}
-
-.qtyBanner strong {
-  font-weight: 700;
-  color: var(--blue);
-}
+.qtyBanner svg { flex-shrink: 0; color: var(--ve-blue); }
+.qtyBanner strong { font-weight: 600; color: var(--ve-blue); }
 
 .detailTabs {
   display: flex;
   gap: 3px;
-  background: var(--surface);
+  background: var(--ve-surface2);
   padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   margin-bottom: 12px;
   width: fit-content;
 }
@@ -492,72 +503,66 @@
   font-weight: 500;
   background: transparent;
   border: none;
-  border-radius: 5px;
-  color: var(--text3);
+  border-radius: 4px;
+  color: var(--ve-text3);
   cursor: pointer;
   transition: all 0.15s;
-  font-family: inherit;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }
-
 .dtabActive {
-  background: var(--surface2);
-  color: var(--text);
+  background: var(--ve-surface);
+  color: var(--ve-text);
   font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
-/* ============================================================
-   OPS TABLE — Hours by operation
-   ============================================================ */
-.opsTable {
+.emptyTab {
+  padding: 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ve-text3);
+}
+
+/* ============ OPS TABLE ============ */
+.ops {
   display: flex;
   flex-direction: column;
+  gap: 0;
 }
 
-.opsHeader {
+.opsHd {
   display: grid;
-  grid-template-columns: 130px 1fr 56px 64px 110px 60px;
+  grid-template-columns: 130px 1fr 60px 70px 130px 70px;
   gap: 12px;
   padding: 6px 12px 8px;
   font-size: 10px;
   font-weight: 600;
-  color: var(--text3);
+  color: var(--ve-text3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-family: 'DM Mono', ui-monospace, monospace;
-  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid var(--ve-border);
 }
-
-.opsHeader span {
-  text-align: right;
-}
-
-.opsHeader span:nth-child(1),
-.opsHeader span:nth-child(2) {
-  text-align: left;
-}
+.opsHd > span { text-align: right; }
+.opsHd > span:nth-child(1),
+.opsHd > span:nth-child(2) { text-align: left; }
 
 .opsRow {
   display: grid;
-  grid-template-columns: 130px 1fr 56px 64px 110px 60px;
+  grid-template-columns: 130px 1fr 60px 70px 130px 70px;
   gap: 12px;
-  padding: 11px 12px;
+  padding: 10px 12px;
   align-items: center;
   font-size: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ve-border);
 }
-
-.opsRow:last-of-type {
-  border-bottom: none;
-}
-
-.opsRow:hover {
-  background: var(--surface);
-}
+.opsRow:last-of-type { border-bottom: none; }
+.opsRow:hover { background: var(--ve-surface2); }
 
 .opName {
   font-size: 12px;
   font-weight: 500;
-  color: var(--text2);
+  color: var(--ve-text2);
 }
 
 .opBarWrap {
@@ -565,56 +570,49 @@
   align-items: center;
   gap: 8px;
 }
-
 .opBar {
   flex: 1;
   height: 5px;
-  background: var(--border);
+  background: var(--ve-border);
   border-radius: 99px;
   overflow: hidden;
 }
-
 .opBarFill {
   height: 100%;
-  background: linear-gradient(90deg, #93C5FD, var(--blue));
+  background: linear-gradient(90deg, #93C5FD, #2563EB);
   border-radius: 99px;
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .opBarPct {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 10px;
-  color: var(--text3);
+  color: var(--ve-text3);
   min-width: 30px;
   text-align: right;
 }
 
 .opEst {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--ve-text3);
   text-align: right;
 }
-
 .opAct {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text);
+  color: var(--ve-text);
   text-align: right;
 }
-
 .opUnit {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--ve-blue);
   text-align: right;
 }
 
-/* ============================================================
-   VARIANCE GAUGE — Mini directional gauge (Option A)
-   ============================================================ */
+/* ============ VARIANCE GAUGE — Option A ============ */
 .varCell {
   display: flex;
   align-items: center;
@@ -622,7 +620,7 @@
   gap: 8px;
 }
 
-.gauge {
+.varGauge {
   width: 54px;
   height: 24px;
   position: relative;
@@ -632,234 +630,189 @@
   flex-shrink: 0;
 }
 
-.gaugeTrack {
+.varGaugeTrack {
   position: absolute;
   left: 0;
   right: 0;
   top: 50%;
   height: 5px;
-  background: var(--border);
+  background: var(--ve-border);
   border-radius: 99px;
   transform: translateY(-50%);
 }
 
-.gaugeMid {
+.varGaugeMid {
   position: absolute;
   left: 50%;
   top: 50%;
   width: 1px;
   height: 11px;
-  background: var(--text3);
+  background: var(--ve-text3);
   transform: translate(-50%, -50%);
   z-index: 2;
 }
 
-.gaugeFillOver {
+.varGaugeFill {
   position: absolute;
   height: 5px;
   border-radius: 99px;
   top: 50%;
   transform: translateY(-50%);
-  background: var(--red);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s ease;
+}
+.varOver {
+  background: var(--ve-red);
+  left: 50%;
+}
+.varUnder {
+  background: var(--ve-green);
+  right: 50%;
 }
 
-.gaugeFillUnder {
-  position: absolute;
-  height: 5px;
-  border-radius: 99px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--green);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.varPctOver {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.varPct {
+  font-family: 'DM Mono', monospace;
   font-size: 13px;
   font-weight: 700;
-  color: var(--red);
   min-width: 48px;
   text-align: right;
 }
+.varPctOver { color: var(--ve-red); }
+.varPctUnder { color: var(--ve-green); }
+.varPctLarge { font-size: 14px; }
 
-.varPctUnder {
-  font-family: 'DM Mono', ui-monospace, monospace;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--green);
-  min-width: 48px;
-  text-align: right;
-}
-
-.varPctNeutral {
-  font-family: 'DM Mono', ui-monospace, monospace;
-  font-size: 12px;
-  color: var(--text3);
-  min-width: 48px;
-  text-align: right;
-}
-
-.varNone {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.varNoEst {
+  font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: var(--text3);
+  color: var(--ve-text3);
+  font-weight: 400;
   text-align: right;
-  padding-right: 4px;
 }
 
-.varBig .varPctOver,
-.varBig .varPctUnder {
-  font-size: 15px;
-}
-
-/* ============================================================
-   OPS TOTAL ROW
-   ============================================================ */
+/* ============ TOTAL ROW ============ */
 .opsTotal {
   display: grid;
-  grid-template-columns: 130px 1fr 56px 64px 110px 60px;
+  grid-template-columns: 130px 1fr 60px 70px 130px 70px;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 12px;
   align-items: center;
-  background: var(--surface);
-  border: 1.5px solid var(--border2);
-  border-radius: 10px;
-  margin-top: 10px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  background: var(--ve-surface);
+  border: 1.5px solid var(--ve-border-strong);
+  border-radius: 8px;
+  margin-top: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.totalLabel {
+.tLabel {
   font-size: 13px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--ve-text);
 }
-
-.totalEst {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.tEst {
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
-  color: var(--text3);
+  color: var(--ve-text3);
   text-align: right;
 }
-
-.totalAct {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.tAct {
+  font-family: 'DM Mono', monospace;
   font-size: 14px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--ve-text);
   text-align: right;
 }
-
-.totalUnit {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.tUnit {
+  font-family: 'DM Mono', monospace;
   font-size: 14px;
   font-weight: 700;
-  color: var(--blue);
+  color: var(--ve-blue);
   text-align: right;
 }
 
-/* ============================================================
-   MATERIALS TABLE
-   ============================================================ */
-.matsTable {
+/* ============ MATERIALS TABLE ============ */
+.mats {
   display: flex;
   flex-direction: column;
 }
 
-.matsHeader {
+.matsHd {
   display: grid;
-  grid-template-columns: 90px 1fr 60px 60px 80px 80px;
-  gap: 8px;
+  grid-template-columns: 100px 1fr 70px 70px 80px 80px;
+  gap: 12px;
   padding: 6px 12px 8px;
   font-size: 10px;
   font-weight: 600;
-  color: var(--text3);
+  color: var(--ve-text3);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  font-family: 'DM Mono', ui-monospace, monospace;
-  border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+  border-bottom: 1px solid var(--ve-border);
 }
+.matsHd > span { text-align: right; }
+.matsHd > span:nth-child(1),
+.matsHd > span:nth-child(2) { text-align: left; }
 
-.matsHeader span {
-  text-align: right;
-}
-
-.matsHeader span:nth-child(1),
-.matsHeader span:nth-child(2) {
-  text-align: left;
-}
-
-.matsRow {
+.matRow {
   display: grid;
-  grid-template-columns: 90px 1fr 60px 60px 80px 80px;
-  gap: 8px;
+  grid-template-columns: 100px 1fr 70px 70px 80px 80px;
+  gap: 12px;
   padding: 9px 12px;
   align-items: center;
   font-size: 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--ve-border);
 }
-
-.matsRow:last-of-type {
-  border-bottom: none;
-}
-
-.matsRow:hover {
-  background: var(--surface);
-}
+.matRow:last-of-type { border-bottom: none; }
+.matRow:hover { background: var(--ve-surface2); }
 
 .matId {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: var(--text2);
+  color: var(--ve-text2);
 }
-
 .matDesc {
   font-size: 12px;
-  color: var(--text2);
+  color: var(--ve-text2);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-
 .matNum {
-  font-family: 'DM Mono', ui-monospace, monospace;
+  font-family: 'DM Mono', monospace;
   font-size: 12px;
   text-align: right;
-  color: var(--text);
-  font-weight: 500;
 }
+.matQty { color: var(--ve-text3); }
+.matUqty { color: var(--ve-text); font-weight: 600; }
+.matCost { color: var(--ve-text3); }
+.matUcost { color: var(--ve-text); font-weight: 600; }
 
-.matsTotal {
+.matTotal {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
-  margin-top: 10px;
-  background: var(--surface);
-  border: 1.5px solid var(--border2);
-  border-radius: 10px;
+  margin-top: 8px;
+  background: var(--ve-surface);
+  border: 1.5px solid var(--ve-border-strong);
+  border-radius: 8px;
   font-size: 12px;
-  color: var(--text2);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  color: var(--ve-text2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
-
-.matsTotalVal {
-  font-family: 'DM Mono', ui-monospace, monospace;
+.matTotalVal {
+  font-family: 'DM Mono', monospace;
   font-size: 14px;
   font-weight: 700;
-  color: var(--text);
+  color: var(--ve-text);
 }
-
-.matsSep {
+.matTotalUnit {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ve-blue);
+}
+.matSep {
   width: 1px;
   height: 14px;
-  background: var(--border);
-}
-
-.matsTotalUnit {
-  font-family: 'DM Mono', ui-monospace, monospace;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--blue);
+  background: var(--ve-border);
 }
