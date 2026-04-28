@@ -43,6 +43,29 @@ async function initDB() {
     if (fs.existsSync(hp)) {
       console.log('Importing Infor history...');
       const data = JSON.parse(fs.readFileSync(hp, 'utf8'));
+
+      // FIX: PDF parser truncated dates (e.g. "07-Jan-202" instead of "07-Jan-2025").
+      // Reconstruct year based on context — almost all data is 2024-2026.
+      const fixDate = (dateStr) => {
+        if (!dateStr || typeof dateStr !== 'string') return dateStr;
+        // Match dd-Mon-XXX where XXX is exactly 3 digits (truncated year)
+        const m = dateStr.match(/^(\d{1,2}-[A-Za-z]{3}-)(\d{3})$/);
+        if (!m) return dateStr;
+        const truncated = m[2];
+        // 202 -> 2025 (most common), 203 -> 2026 if month is late, etc.
+        // Since data range is 2024-2026, "202X" truncated to "202" is always 2025
+        // (truncation removes trailing digit). For "201" -> 2010s won't appear in our data.
+        const yearMap = { '202': '2025', '201': '2024', '203': '2026' };
+        const fullYear = yearMap[truncated] || (truncated + '0');
+        return m[1] + fullYear;
+      };
+
+      data.forEach(item => {
+        if (Array.isArray(item.wos)) {
+          item.wos.forEach(wo => { if (wo.d) wo.d = fixDate(wo.d); });
+        }
+      });
+
       const bs = 50;
       for (let i = 0; i < data.length; i += bs) {
         const batch = data.slice(i, i + bs);
