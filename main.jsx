@@ -1,18 +1,865 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import QuoteList from './pages/QuoteList'
-import QuoteEditor from './pages/QuoteEditor'
-import HistorySearch from './pages/HistorySearch'
-import MaterialCalc from './pages/MaterialCalc'
+/* ============================================================
+   HISTORY SEARCH — Modern SaaS layout
+   ============================================================ */
 
-export default function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<QuoteList />} />
-      <Route path="/quote/new" element={<QuoteEditor />} />
-      <Route path="/quote/:id" element={<QuoteEditor />} />
-      <Route path="/history" element={<HistorySearch />} />
-      <Route path="/materials" element={<MaterialCalc />} />
-    </Routes>
-  )
+.page {
+  --bg: #F8F9FB;
+  --surface: #FFF;
+  --surface2: #F4F5F8;
+  --surface3: #FAFBFC;
+  --border: #E5E7EB;
+  --border2: #D1D5DB;
+  --text: #111827;
+  --text2: #4B5563;
+  --text3: #9CA3AF;
+  --blue: #2563EB;
+  --blue-lt: #EFF6FF;
+  --blue-bdr: #BFDBFE;
+  --green: #059669;
+  --green-lt: #ECFDF5;
+  --green-bdr: #6EE7B7;
+  --red: #DC2626;
+  --red-lt: #FEF2F2;
+  --red-bdr: #FCA5A5;
+  --amber: #D97706;
+  --amber-lt: #FFFBEB;
+  --amber-bdr: #FDE68A;
+
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  padding: 28px 32px;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.pageHeader {
+  margin-bottom: 18px;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+}
+
+.pageSub {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text3);
+  margin: 0;
+}
+
+/* ============================================================
+   SEARCH BAR
+   ============================================================ */
+.search {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text3);
+  pointer-events: none;
+}
+
+.search input {
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 11px 14px 11px 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.search input::placeholder {
+  color: var(--text3);
+}
+
+/* ============================================================
+   FILTERS
+   ============================================================ */
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggleTrack {
+  width: 32px;
+  height: 18px;
+  border-radius: 99px;
+  background: var(--border2);
+  position: relative;
+  transition: background 0.2s;
+}
+
+.toggleTrack.toggleOn {
+  background: var(--blue);
+}
+
+.toggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #FFF;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.toggleOn .toggleThumb {
+  transform: translateX(14px);
+}
+
+.toggleLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+}
+
+.resultsCount {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text3);
+  margin-left: auto;
+}
+
+/* ============================================================
+   PART CARD
+   ============================================================ */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cardRow {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.cardRow:hover {
+  background: var(--surface2);
+}
+
+.shopPill {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.shopMetal {
+  background: var(--blue-lt);
+  color: var(--blue);
+}
+
+.shopWood {
+  background: var(--green-lt);
+  color: var(--green);
+}
+
+.partnum {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 500;
+}
+
+.partName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metaGroup {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.bomPill {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: var(--amber-lt);
+  color: var(--amber);
+  font-family: 'DM Mono', ui-monospace, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.metaItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.metaLbl {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'DM Mono', ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.metaVal {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.chevron {
+  color: var(--text3);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ============================================================
+   WORK ORDERS LIST
+   ============================================================ */
+.wosWrap {
+  border-top: 1px solid var(--border);
+  background: var(--surface3);
+  padding: 14px 18px;
+}
+
+.wosLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wosHint {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  font-size: 10px;
+}
+
+.woTableHead {
+  display: grid;
+  grid-template-columns: 74px 96px 92px 50px 60px 60px 64px 72px 24px;
+  padding: 6px 14px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'DM Mono', ui-monospace, monospace;
+}
+
+.woTableHead span {
+  text-align: right;
+}
+
+.woTableHead span:nth-child(1),
+.woTableHead span:nth-child(2),
+.woTableHead span:nth-child(3) {
+  text-align: left;
+}
+
+.woCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+
+.woCard:last-child {
+  margin-bottom: 0;
+}
+
+.woRow {
+  display: grid;
+  grid-template-columns: 74px 96px 92px 50px 60px 60px 64px 72px 24px;
+  padding: 11px 14px;
+  cursor: pointer;
+  transition: background 0.12s;
+  align-items: center;
+  font-size: 12px;
+}
+
+.woRow:hover {
+  background: var(--surface2);
+}
+
+.status {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+  display: inline-block;
+  width: fit-content;
+}
+
+.statusClosed {
+  background: var(--green-lt);
+  color: var(--green);
+}
+
+.statusOpen {
+  background: var(--surface2);
+  color: var(--text3);
+}
+
+.statusRel {
+  background: var(--amber-lt);
+  color: var(--amber);
+}
+
+.woId {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.woDate {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text3);
+}
+
+.woNum {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  text-align: right;
+}
+
+.woQty {
+  color: var(--blue);
+  font-weight: 600;
+}
+
+.woEst {
+  color: var(--text3);
+}
+
+.woAct {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.woUnit {
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.woMat {
+  color: var(--text2);
+}
+
+.woToggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  width: 22px;
+  height: 22px;
+  font-size: 14px;
+  color: var(--text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  font-family: inherit;
+  line-height: 1;
+  padding: 0;
+}
+
+.woToggle:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+/* ============================================================
+   WO DETAIL (expanded)
+   ============================================================ */
+.woDetail {
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  padding: 14px;
+}
+
+.qtyBanner {
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--blue-lt);
+  border: 1px solid var(--blue-bdr);
+  border-radius: 8px;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qtyBanner svg {
+  flex-shrink: 0;
+  color: var(--blue);
+}
+
+.qtyBanner strong {
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.detailTabs {
+  display: flex;
+  gap: 3px;
+  background: var(--surface);
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 12px;
+  width: fit-content;
+}
+
+.dtab {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.dtabActive {
+  background: var(--surface2);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ============================================================
+   OPS TABLE — Hours by operation
+   ============================================================ */
+.opsTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.opsHeader {
+  display: grid;
+  grid-template-columns: 130px 1fr 56px 64px 110px 60px;
+  gap: 12px;
+  padding: 6px 12px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'DM Mono', ui-monospace, monospace;
+  border-bottom: 1px solid var(--border);
+}
+
+.opsHeader span {
+  text-align: right;
+}
+
+.opsHeader span:nth-child(1),
+.opsHeader span:nth-child(2) {
+  text-align: left;
+}
+
+.opsRow {
+  display: grid;
+  grid-template-columns: 130px 1fr 56px 64px 110px 60px;
+  gap: 12px;
+  padding: 11px 12px;
+  align-items: center;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.opsRow:last-of-type {
+  border-bottom: none;
+}
+
+.opsRow:hover {
+  background: var(--surface);
+}
+
+.opName {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text2);
+}
+
+.opBarWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.opBar {
+  flex: 1;
+  height: 5px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.opBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #93C5FD, var(--blue));
+  border-radius: 99px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.opBarPct {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 10px;
+  color: var(--text3);
+  min-width: 30px;
+  text-align: right;
+}
+
+.opEst {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text3);
+  text-align: right;
+}
+
+.opAct {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.opUnit {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  text-align: right;
+}
+
+/* ============================================================
+   VARIANCE GAUGE — Mini directional gauge (Option A)
+   ============================================================ */
+.varCell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gauge {
+  width: 54px;
+  height: 24px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.gaugeTrack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 5px;
+  background: var(--border);
+  border-radius: 99px;
+  transform: translateY(-50%);
+}
+
+.gaugeMid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1px;
+  height: 11px;
+  background: var(--text3);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.gaugeFillOver {
+  position: absolute;
+  height: 5px;
+  border-radius: 99px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--red);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gaugeFillUnder {
+  position: absolute;
+  height: 5px;
+  border-radius: 99px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--green);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.varPctOver {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red);
+  min-width: 48px;
+  text-align: right;
+}
+
+.varPctUnder {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--green);
+  min-width: 48px;
+  text-align: right;
+}
+
+.varPctNeutral {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text3);
+  min-width: 48px;
+  text-align: right;
+}
+
+.varNone {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text3);
+  text-align: right;
+  padding-right: 4px;
+}
+
+.varBig .varPctOver,
+.varBig .varPctUnder {
+  font-size: 15px;
+}
+
+/* ============================================================
+   OPS TOTAL ROW
+   ============================================================ */
+.opsTotal {
+  display: grid;
+  grid-template-columns: 130px 1fr 56px 64px 110px 60px;
+  gap: 12px;
+  padding: 12px 14px;
+  align-items: center;
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 10px;
+  margin-top: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.totalLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.totalEst {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  color: var(--text3);
+  text-align: right;
+}
+
+.totalAct {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: right;
+}
+
+.totalUnit {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
+  text-align: right;
+}
+
+/* ============================================================
+   MATERIALS TABLE
+   ============================================================ */
+.matsTable {
+  display: flex;
+  flex-direction: column;
+}
+
+.matsHeader {
+  display: grid;
+  grid-template-columns: 90px 1fr 60px 60px 80px 80px;
+  gap: 8px;
+  padding: 6px 12px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: 'DM Mono', ui-monospace, monospace;
+  border-bottom: 1px solid var(--border);
+}
+
+.matsHeader span {
+  text-align: right;
+}
+
+.matsHeader span:nth-child(1),
+.matsHeader span:nth-child(2) {
+  text-align: left;
+}
+
+.matsRow {
+  display: grid;
+  grid-template-columns: 90px 1fr 60px 60px 80px 80px;
+  gap: 8px;
+  padding: 9px 12px;
+  align-items: center;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.matsRow:last-of-type {
+  border-bottom: none;
+}
+
+.matsRow:hover {
+  background: var(--surface);
+}
+
+.matId {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.matDesc {
+  font-size: 12px;
+  color: var(--text2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.matNum {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 12px;
+  text-align: right;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.matsTotal {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  margin-top: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--text2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.matsTotalVal {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.matsSep {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+}
+
+.matsTotalUnit {
+  font-family: 'DM Mono', ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue);
 }

@@ -1,189 +1,304 @@
-.page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
-.loading { display:flex; align-items:center; justify-content:center; height:100vh; color:var(--text3); font-size:13px; }
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import styles from './MaterialCalc.module.css'
 
-.topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; }
-.backBtn { background:none; border:none; font-size:13px; color:var(--text3); padding:0; cursor:pointer; transition:color .15s; display:flex; align-items:center; gap:4px; }
-.backBtn:hover { color:var(--text); }
-.saveStatus { font-family:var(--font-mono); font-size:11px; }
-.saving { color:var(--text3); }
-.saved { color:var(--wood); }
+export default function MaterialCalc() {
+  const nav = useNavigate()
+  const [tab, setTab] = useState('sheets')
 
-.quoteHeader {
-  display:flex; justify-content:space-between; align-items:flex-start;
-  gap:1rem; margin-bottom:1.5rem; padding:20px 24px;
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--radius-xl); box-shadow:var(--shadow-sm);
-  flex-wrap:wrap;
-}
-.headerLeft { display:flex; flex-direction:column; gap:8px; flex:1; min-width:200px; }
-.nameInput {
-  font-size:22px; font-weight:600; letter-spacing:-.03em;
-  border:none; border-radius:0; padding:2px 0;
-  background:transparent; color:var(--text); box-shadow:none;
-}
-.nameInput:focus { border:none; box-shadow:none; outline:none; }
-.nameInput::placeholder { color:var(--text3); font-weight:400; }
-.clientInput {
-  font-size:13px; border:none; border-radius:0; padding:2px 0;
-  background:transparent; color:var(--text2); max-width:280px; box-shadow:none;
-}
-.clientInput:focus { border:none; box-shadow:none; outline:none; }
-.clientInput::placeholder { color:var(--text3); }
-.headerRight { display:flex; align-items:center; gap:16px; flex-shrink:0; }
-.totalBlock { text-align:right; }
-.totalLabel { font-size:11px; color:var(--text3); display:block; margin-bottom:2px; text-transform:uppercase; letter-spacing:.05em; font-weight:500; }
-.totalHrs { font-family:var(--font-mono); font-size:26px; font-weight:500; color:var(--text); letter-spacing:-.02em; }
-.totalUnit { font-size:14px; font-weight:400; color:var(--text3); margin-left:2px; }
+  return (
+    <div className={styles.page}>
+      <div className={styles.topbar}>
+        <button className={styles.backBtn} onClick={() => nav('/')}>← All quotes</button>
+      </div>
 
-.addBtn {
-  background:var(--accent); color:#fff;
-  border:none; border-radius:var(--radius);
-  padding:8px 16px; font-size:13px; font-weight:500;
-  cursor:pointer; transition:opacity .15s; white-space:nowrap;
-  box-shadow:var(--shadow-sm);
-}
-.addBtn:hover { opacity:.88; }
+      <div className={styles.header}>
+        <div className={styles.title}>Material estimator</div>
+        <p className={styles.sub}>Dimensional calculators for quick material estimates on new projects</p>
+      </div>
 
-.items { display:flex; flex-direction:column; gap:10px; }
-.emptyItems {
-  text-align:center; padding:3rem; color:var(--text3);
-  display:flex; flex-direction:column; align-items:center; gap:1rem;
-  border:1px dashed var(--border); border-radius:var(--radius-xl);
-  background:var(--bg2);
+      <div className={styles.tabs}>
+        <button className={`${styles.tab} ${tab === 'sheets' ? styles.tabActive : ''}`} onClick={() => setTab('sheets')}>
+          Sheet goods
+        </button>
+        <button className={`${styles.tab} ${tab === 'tubing' ? styles.tabActive : ''}`} onClick={() => setTab('tubing')}>
+          Tubing / metal
+        </button>
+      </div>
+
+      {tab === 'sheets' && <SheetCalc />}
+      {tab === 'tubing' && <TubingCalc />}
+    </div>
+  )
 }
 
-.card {
-  background:var(--bg2);
-  border:1px solid var(--border);
-  border-radius:var(--radius-xl);
-  overflow:hidden;
-  box-shadow:var(--shadow-sm);
-  transition:box-shadow .15s;
+function SheetCalc() {
+  const [panels, setPanels] = useState([
+    { id: 1, name: 'Panel 1', length: 48, width: 24, qty: 1 }
+  ])
+  const [sheetL, setSheetL] = useState(96)
+  const [sheetW, setSheetW] = useState(48)
+  const [waste, setWaste] = useState(12)
+  const [unit, setUnit] = useState('in')
+
+  let nextId = panels.length + 1
+
+  function addPanel() {
+    setPanels([...panels, { id: Date.now(), name: `Panel ${panels.length + 1}`, length: 48, width: 24, qty: 1 }])
+  }
+
+  function removePanel(id) {
+    setPanels(panels.filter(p => p.id !== id))
+  }
+
+  function updatePanel(id, field, value) {
+    setPanels(panels.map(p => p.id === id ? { ...p, [field]: value } : p))
+  }
+
+  const sheetArea = sheetL * sheetW
+  const usableArea = sheetArea * (1 - waste / 100)
+
+  const panelResults = panels.map(p => {
+    const panelArea = p.length * p.width
+    const totalArea = panelArea * (p.qty || 1)
+    return { ...p, panelArea, totalArea }
+  })
+
+  const grandTotalArea = panelResults.reduce((sum, p) => sum + p.totalArea, 0)
+  const sheetsNeeded = usableArea > 0 ? Math.ceil(grandTotalArea / usableArea) : 0
+  const utilization = sheetsNeeded > 0 ? ((grandTotalArea / (sheetsNeeded * sheetArea)) * 100).toFixed(1) : 0
+
+  const unitLabel = unit === 'in' ? 'in' : 'mm'
+  const unitLabel2 = unit === 'in' ? 'in²' : 'mm²'
+
+  return (
+    <div className={styles.calcCard}>
+      <div className={styles.calcHeader}>
+        <div>
+          <div className={styles.calcTitle}>Sheet goods calculator</div>
+          <div className={styles.calcSub}>MDF, plywood, melamine, laminate — how many sheets do you need?</div>
+        </div>
+        <div className={styles.unitToggle}>
+          <button className={`${styles.unitBtn} ${unit === 'in' ? styles.unitActive : ''}`} onClick={() => setUnit('in')}>Inches</button>
+          <button className={`${styles.unitBtn} ${unit === 'mm' ? styles.unitActive : ''}`} onClick={() => setUnit('mm')}>mm</button>
+        </div>
+      </div>
+
+      <div className={styles.sheetConfig}>
+        <div className={styles.configLabel}>Sheet size</div>
+        <div className={styles.configRow}>
+          <div className={styles.configField}>
+            <label className={styles.lbl}>Length ({unitLabel})</label>
+            <input type="number" value={sheetL} onChange={e => setSheetL(+e.target.value)} />
+          </div>
+          <span className={styles.configX}>×</span>
+          <div className={styles.configField}>
+            <label className={styles.lbl}>Width ({unitLabel})</label>
+            <input type="number" value={sheetW} onChange={e => setSheetW(+e.target.value)} />
+          </div>
+          <div className={styles.configField}>
+            <label className={styles.lbl}>Waste %</label>
+            <input type="number" value={waste} onChange={e => setWaste(+e.target.value)} min="0" max="50" />
+          </div>
+        </div>
+        <div className={styles.presets}>
+          <span className={styles.presetLabel}>Presets:</span>
+          <button className={styles.preset} onClick={() => { setSheetL(96); setSheetW(48); setUnit('in') }}>4×8 ft</button>
+          <button className={styles.preset} onClick={() => { setSheetL(120); setSheetW(60); setUnit('in') }}>5×10 ft</button>
+          <button className={styles.preset} onClick={() => { setSheetL(2440); setSheetW(1220); setUnit('mm') }}>2440×1220</button>
+        </div>
+      </div>
+
+      <div className={styles.panelSection}>
+        <div className={styles.panelHeader}>
+          <span className={styles.configLabel}>Panels to cut</span>
+          <button className={styles.addPanelBtn} onClick={addPanel}>+ Add panel</button>
+        </div>
+
+        {panels.map((p, i) => (
+          <div key={p.id} className={styles.panelRow}>
+            <div className={styles.panelName}>
+              <input value={p.name} onChange={e => updatePanel(p.id, 'name', e.target.value)} placeholder={`Panel ${i + 1}`} />
+            </div>
+            <div className={styles.panelDim}>
+              <label className={styles.lbl}>L ({unitLabel})</label>
+              <input type="number" value={p.length} onChange={e => updatePanel(p.id, 'length', +e.target.value)} />
+            </div>
+            <span className={styles.configX}>×</span>
+            <div className={styles.panelDim}>
+              <label className={styles.lbl}>W ({unitLabel})</label>
+              <input type="number" value={p.width} onChange={e => updatePanel(p.id, 'width', +e.target.value)} />
+            </div>
+            <div className={styles.panelQty}>
+              <label className={styles.lbl}>Qty</label>
+              <input type="number" value={p.qty} min="1" onChange={e => updatePanel(p.id, 'qty', +e.target.value)} />
+            </div>
+            <div className={styles.panelArea}>
+              {(p.length * p.width * (p.qty || 1)).toLocaleString()} {unitLabel2}
+            </div>
+            {panels.length > 1 && (
+              <button className={styles.removePanelBtn} onClick={() => removePanel(p.id)}>×</button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.resultCard}>
+        <div className={styles.resultGrid}>
+          <div className={styles.resultItem}>
+            <div className={styles.resultLabel}>Total panel area</div>
+            <div className={styles.resultValue}>{grandTotalArea.toLocaleString()} {unitLabel2}</div>
+          </div>
+          <div className={styles.resultItem}>
+            <div className={styles.resultLabel}>Sheet area (usable at {waste}% waste)</div>
+            <div className={styles.resultValue}>{Math.round(usableArea).toLocaleString()} {unitLabel2}</div>
+          </div>
+          <div className={styles.resultMain}>
+            <div className={styles.resultLabel}>Sheets needed</div>
+            <div className={styles.resultBig}>{sheetsNeeded}</div>
+            <div className={styles.resultSub}>{sheetL}×{sheetW} {unitLabel} sheets · {utilization}% utilization</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
-.card:hover { box-shadow:var(--shadow); }
 
-.cardHeader {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:10px 16px;
-  background:var(--bg3);
-  border-bottom:1px solid var(--border);
+function TubingCalc() {
+  const [pieces, setPieces] = useState([
+    { id: 1, name: 'Uprights', length: 60, qty: 4 },
+    { id: 2, name: 'Crossbars top', length: 72, qty: 2 },
+    { id: 3, name: 'Crossbars bottom', length: 72, qty: 2 },
+  ])
+  const [profile, setProfile] = useState('1x1 Square')
+  const [unit, setUnit] = useState('in')
+  const [cutWaste, setCutWaste] = useState(0.5)
+
+  function addPiece() {
+    setPieces([...pieces, { id: Date.now(), name: `Piece ${pieces.length + 1}`, length: 48, qty: 1 }])
+  }
+
+  function removePiece(id) {
+    setPieces(pieces.filter(p => p.id !== id))
+  }
+
+  function updatePiece(id, field, value) {
+    setPieces(pieces.map(p => p.id === id ? { ...p, [field]: value } : p))
+  }
+
+  const unitLabel = unit === 'in' ? 'in' : 'mm'
+  const stockLength = unit === 'in' ? 240 : 6096 // 20ft standard stock
+  const cutWasteIn = unit === 'in' ? cutWaste : cutWaste * 25.4
+
+  const pieceResults = pieces.map(p => {
+    const totalLength = (p.length + cutWasteIn) * (p.qty || 1)
+    return { ...p, totalLength }
+  })
+
+  const grandTotalLength = pieceResults.reduce((sum, p) => sum + p.totalLength, 0)
+  const stocksNeeded = stockLength > 0 ? Math.ceil(grandTotalLength / stockLength) : 0
+
+  const toFt = (v) => unit === 'in' ? (v / 12).toFixed(1) : (v / 304.8).toFixed(1)
+
+  return (
+    <div className={styles.calcCard}>
+      <div className={styles.calcHeader}>
+        <div>
+          <div className={styles.calcTitle}>Tubing / metal calculator</div>
+          <div className={styles.calcSub}>Calculate total linear length and number of stock pieces needed</div>
+        </div>
+        <div className={styles.unitToggle}>
+          <button className={`${styles.unitBtn} ${unit === 'in' ? styles.unitActive : ''}`} onClick={() => setUnit('in')}>Inches</button>
+          <button className={`${styles.unitBtn} ${unit === 'mm' ? styles.unitActive : ''}`} onClick={() => setUnit('mm')}>mm</button>
+        </div>
+      </div>
+
+      <div className={styles.sheetConfig}>
+        <div className={styles.configRow}>
+          <div className={styles.configField} style={{ flex: 2 }}>
+            <label className={styles.lbl}>Profile</label>
+            <select value={profile} onChange={e => setProfile(e.target.value)}>
+              <optgroup label="Square tube">
+                <option>1×1 Square</option>
+                <option>1.5×1.5 Square</option>
+                <option>2×2 Square</option>
+              </optgroup>
+              <optgroup label="Rectangular tube">
+                <option>1×2 Rectangular</option>
+                <option>1×3 Rectangular</option>
+                <option>2×3 Rectangular</option>
+                <option>2×4 Rectangular</option>
+              </optgroup>
+              <optgroup label="Round tube">
+                <option>1" Round</option>
+                <option>1.5" Round</option>
+                <option>2" Round</option>
+              </optgroup>
+              <optgroup label="Other">
+                <option>Flat bar</option>
+                <option>Angle iron</option>
+                <option>Channel</option>
+                <option>Custom</option>
+              </optgroup>
+            </select>
+          </div>
+          <div className={styles.configField}>
+            <label className={styles.lbl}>Stock length ({unitLabel})</label>
+            <input type="number" value={stockLength} readOnly style={{ opacity: 0.6 }} />
+          </div>
+          <div className={styles.configField}>
+            <label className={styles.lbl}>Cut waste ({unitLabel})</label>
+            <input type="number" value={cutWaste} onChange={e => setCutWaste(+e.target.value)} step="0.25" />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.panelSection}>
+        <div className={styles.panelHeader}>
+          <span className={styles.configLabel}>Cut list</span>
+          <button className={styles.addPanelBtn} onClick={addPiece}>+ Add piece</button>
+        </div>
+
+        {pieces.map((p, i) => (
+          <div key={p.id} className={styles.panelRow}>
+            <div className={styles.panelName}>
+              <input value={p.name} onChange={e => updatePiece(p.id, 'name', e.target.value)} placeholder={`Piece ${i + 1}`} />
+            </div>
+            <div className={styles.panelDim}>
+              <label className={styles.lbl}>Length ({unitLabel})</label>
+              <input type="number" value={p.length} onChange={e => updatePiece(p.id, 'length', +e.target.value)} />
+            </div>
+            <div className={styles.panelQty}>
+              <label className={styles.lbl}>Qty</label>
+              <input type="number" value={p.qty} min="1" onChange={e => updatePiece(p.id, 'qty', +e.target.value)} />
+            </div>
+            <div className={styles.panelArea}>
+              {toFt(p.length * (p.qty || 1))} ft
+            </div>
+            {pieces.length > 1 && (
+              <button className={styles.removePanelBtn} onClick={() => removePiece(p.id)}>×</button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.resultCard}>
+        <div className={styles.resultGrid}>
+          <div className={styles.resultItem}>
+            <div className={styles.resultLabel}>Total linear length</div>
+            <div className={styles.resultValue}>{Math.round(grandTotalLength).toLocaleString()} {unitLabel} ({toFt(grandTotalLength)} ft)</div>
+          </div>
+          <div className={styles.resultItem}>
+            <div className={styles.resultLabel}>Profile</div>
+            <div className={styles.resultValue}>{profile}</div>
+          </div>
+          <div className={styles.resultMain}>
+            <div className={styles.resultLabel}>Stock pieces needed</div>
+            <div className={styles.resultBig}>{stocksNeeded}</div>
+            <div className={styles.resultSub}>@ {unit === 'in' ? '20 ft' : '6096mm'} stock lengths · includes {cutWaste}{unitLabel} cut waste per piece</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
-.itemNum {
-  font-family:var(--font-mono); font-size:11px; font-weight:500;
-  color:var(--text3); letter-spacing:.04em;
-}
-.removeItemBtn { background:none; border:none; font-size:12px; color:var(--text3); cursor:pointer; transition:color .15s; }
-.removeItemBtn:hover { color:var(--danger); }
-
-.fieldRow { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; padding:14px 16px 0; align-items:end; }
-.fieldDesc { grid-column:span 1; }
-.fieldQty { min-width:76px; }
-.lbl { display:block; font-size:11px; font-weight:500; color:var(--text3); margin-bottom:4px; }
-.removedNote { color:var(--warn); font-weight:400; font-size:11px; }
-
-.cardDivider { border:none; border-top:1px solid var(--border); margin:14px 0 0; }
-.cardBody { display:grid; grid-template-columns:1fr 1fr; gap:0; }
-@media (max-width:640px) {
-  .cardBody { grid-template-columns:1fr; }
-  .fieldRow { grid-template-columns:1fr 1fr; }
-  .fieldDesc { grid-column:span 2; }
-}
-
-.leftCol { padding:14px 16px; border-right:1px solid var(--border); }
-.rightCol { padding:14px 16px; }
-
-.shopToggle { display:flex; gap:6px; margin-bottom:14px; }
-.shopBtn {
-  flex:1; padding:7px 10px;
-  font-size:13px; font-weight:500;
-  border-radius:var(--radius); border:1px solid var(--border);
-  background:var(--bg3); color:var(--text2); cursor:pointer; transition:all .15s;
-}
-.shopBtn:hover { background:var(--bg4); }
-.shopMetal { background:var(--metal-bg) !important; color:var(--metal) !important; border-color:var(--metal-bdr) !important; }
-.shopWood  { background:var(--wood-bg)  !important; color:var(--wood)  !important; border-color:var(--wood-bdr)  !important; }
-
-.procList { display:flex; flex-direction:column; gap:4px; }
-.procRow {
-  display:flex; align-items:center; gap:8px;
-  padding:7px 10px; border-radius:var(--radius);
-  border:1px solid var(--border); background:var(--bg3); transition:all .12s;
-}
-.metalOn { background:var(--metal-bg); border-color:var(--metal-bdr); }
-.woodOn  { background:var(--wood-bg);  border-color:var(--wood-bdr); }
-.addonOn { background:var(--warn-bg);  border-color:var(--warn-bdr); }
-.removed { background:transparent; border-color:var(--border); opacity:.45; }
-
-.procName { font-size:12px; font-weight:500; flex:1; min-width:0; color:var(--text2); }
-.metalOn .procName { color:var(--metal); }
-.woodOn  .procName { color:var(--wood); }
-.addonOn .procName { color:var(--warn); }
-.removed .procName { color:var(--text3); text-decoration:line-through; }
-
-.procAwo { font-family:var(--font-mono); font-size:10px; color:var(--text3); white-space:nowrap; flex-shrink:0; }
-
-.cxPills { display:flex; gap:3px; flex-shrink:0; }
-.cxPill {
-  font-family:var(--font-mono); font-size:10px; font-weight:500;
-  padding:2px 7px; border-radius:20px;
-  border:1px solid var(--border); cursor:pointer;
-  background:transparent; color:var(--text3); transition:all .12s;
-}
-.cxS { background:var(--wood-bg); color:var(--wood); border-color:var(--wood-bdr); }
-.cxM { background:var(--warn-bg); color:var(--warn); border-color:var(--warn-bdr); }
-.cxC { background:#FEF2F2; color:var(--danger); border-color:#FECACA; }
-
-.removeBtn {
-  font-size:11px; font-weight:500; padding:2px 8px; border-radius:var(--radius);
-  border:1px solid var(--border); cursor:pointer;
-  background:transparent; color:var(--text3); transition:all .12s; flex-shrink:0;
-}
-.removeBtn:hover { background:#FEF2F2; color:var(--danger); border-color:#FECACA; }
-.addBackBtn {
-  font-size:11px; padding:2px 8px; border-radius:var(--radius);
-  border:1px dashed var(--border); cursor:pointer;
-  background:transparent; color:var(--text3); transition:all .12s; flex-shrink:0;
-}
-.addBackBtn:hover { border-color:var(--border2); color:var(--text2); }
-
-.addonSep {
-  font-size:11px; font-weight:500; color:var(--text3);
-  margin-top:12px; margin-bottom:6px; padding-top:12px;
-  border-top:1px dashed var(--border);
-}
-
-.resultBlock { background:var(--bg3); border-radius:var(--radius-lg); border:1px solid var(--border); padding:12px 14px; }
-.noProcs { font-size:12px; color:var(--text3); padding:6px 0; }
-
-.resultLine {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:5px 0; border-bottom:1px solid var(--border); gap:6px;
-}
-.resultLine:last-of-type { border-bottom:none; }
-.resultName { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:5px; flex:1; min-width:0; }
-.resultHrs { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); flex-shrink:0; }
-
-.cxTag { font-family:var(--font-mono); font-size:10px; font-weight:500; padding:1px 5px; border-radius:10px; }
-.cxTagS { background:var(--wood-bg); color:var(--wood); }
-.cxTagM { background:var(--warn-bg); color:var(--warn); }
-.cxTagC { background:#FEF2F2; color:var(--danger); }
-.addonTag { font-family:var(--font-mono); font-size:9px; background:var(--warn-bg); color:var(--warn); padding:1px 5px; border-radius:10px; text-transform:uppercase; letter-spacing:.04em; }
-
-.resultTotal { display:flex; justify-content:space-between; align-items:baseline; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
-
-.summary {
-  background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--radius-xl); padding:18px 20px; margin-top:1.5rem;
-  box-shadow:var(--shadow-sm);
-}
-.summaryTitle { font-size:11px; font-weight:500; color:var(--text3); margin-bottom:12px; text-transform:uppercase; letter-spacing:.05em; }
-.sumRow { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; }
-.sumRow:last-of-type { border-bottom:none; }
-.shopDot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-.dotMetal { background:var(--metal); }
-.dotWood  { background:var(--wood); }
-.sumDesc { font-size:13px; font-weight:500; color:var(--text); flex:1; min-width:100px; letter-spacing:-.01em; }
-.sumInfo { font-family:var(--font-mono); font-size:11px; color:var(--text3); }
-.sumHrs  { font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--text); min-width:52px; text-align:right; }
-.sumTotal { display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); font-size:13px; color:var(--text2); }
-.sumNote { font-family:var(--font-mono); font-size:11px; color:var(--text3); margin-top:6px; }

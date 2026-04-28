@@ -1,122 +1,345 @@
-.page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
-.topbar { margin-bottom: 1.5rem; }
-.backBtn { background:none; border:none; font-size:13px; color:var(--text3); cursor:pointer; padding:0; transition:color .15s; }
-.backBtn:hover { color:var(--text); }
-.header { margin-bottom: 1.5rem; }
-.title { font-size:24px; font-weight:600; color:var(--text); letter-spacing:-.03em; margin-bottom:4px; }
-.sub { font-family:var(--font-mono); font-size:11px; color:var(--text3); }
-.searchWrap { position:relative; margin-bottom:1.5rem; }
-.searchInput { width:100%; font-size:14px; padding:12px 16px; border:1px solid var(--border); border-radius:var(--radius-lg); background:var(--bg2); color:var(--text); box-shadow:var(--shadow); transition:border-color .15s, box-shadow .15s; }
-.searchInput:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.1), var(--shadow); outline:none; }
-.searchInput::placeholder { color:var(--text3); }
-.spinner { position:absolute; right:14px; top:50%; transform:translateY(-50%); width:14px; height:14px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .6s linear infinite; }
-@keyframes spin { to { transform:translateY(-50%) rotate(360deg); } }
-.empty { text-align:center; padding:3rem; color:var(--text3); font-size:13px; }
-.results { display:flex; flex-direction:column; gap:4px; }
-.hint { font-family:var(--font-mono); font-size:11px; color:var(--text3); text-align:center; padding:.75rem 0; }
-.placeholder { text-align:center; padding:3.5rem 1rem; }
-.placeholder p { font-size:13px; color:var(--text3); margin-bottom:1.25rem; }
-.examplesLabel { font-size:11px; font-weight:500; color:var(--text3); margin-bottom:10px; text-transform:uppercase; letter-spacing:.05em; }
-.examples { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
-.exampleChip { font-family:var(--font-mono); font-size:12px; padding:4px 12px; border:1px solid var(--border); border-radius:20px; cursor:pointer; color:var(--text2); background:var(--bg2); transition:all .15s; box-shadow:var(--shadow-sm); }
-.exampleChip:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
+import { useState, useEffect, useCallback } from 'react';
+import s from './HistorySearch.module.css';
 
-.card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-xl); overflow:hidden; box-shadow:var(--shadow-sm); transition:box-shadow .15s; }
-.card:hover { box-shadow:var(--shadow); }
-.cardHeader { display:flex; justify-content:space-between; align-items:center; padding:13px 18px; cursor:pointer; transition:background .1s; gap:10px; }
-.cardHeader:hover { background:var(--bg3); }
-.cardLeft { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
-.shopBadge { font-family:var(--font-mono); font-size:10px; font-weight:500; padding:2px 8px; border-radius:20px; flex-shrink:0; text-transform:uppercase; letter-spacing:.04em; }
-.metal { background:var(--metal-bg); color:var(--metal); border:1px solid var(--metal-bdr); }
-.wood  { background:var(--wood-bg);  color:var(--wood);  border:1px solid var(--wood-bdr); }
-.partNum { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text3); flex-shrink:0; }
-.partDesc { font-size:14px; font-weight:500; color:var(--text); letter-spacing:-.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.cardRight { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-.matBadge { font-family:var(--font-mono); font-size:9px; font-weight:500; padding:2px 6px; border-radius:10px; background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bdr); text-transform:uppercase; }
-.woCount { font-family:var(--font-mono); font-size:11px; color:var(--text3); }
-.totalHrs { font-family:var(--font-mono); font-size:13px; font-weight:500; color:var(--text); }
-.chevron { font-size:10px; color:var(--text3); }
+// Format date: "07-Jan-2025" -> "07 Jan 2025". Also handles truncated dates as fallback.
+function formatDate(d) {
+  if (!d) return '';
+  // Fallback for any truncated dates that slipped through
+  let fixed = d.replace(/-(202)$/, '-2025').replace(/-(201)$/, '-2024').replace(/-(203)$/, '-2026');
+  return fixed.replace(/-/g, ' ');
+}
 
-.opsBlock { border-top:1px solid var(--border); padding:14px 18px; background:var(--bg3); }
-.woSectionTitle { font-size:11px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-bottom:6px; }
+// Fmt number with 2 decimals
+const f2 = (n) => (n == null ? '—' : Number(n).toFixed(2));
 
-.woListHeader { display:flex; align-items:center; gap:8px; padding:4px 14px 6px; font-family:var(--font-mono); font-size:9px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); margin-bottom:6px; }
-.woColStatus { min-width:58px; }
-.woColId { min-width:95px; }
-.woColDate { min-width:75px; flex:1; }
-.woColQty { min-width:30px; text-align:center; }
-.woColEst { min-width:52px; text-align:right; }
-.woColAct { min-width:52px; text-align:right; }
-.woColUnit { min-width:48px; text-align:right; }
-.woColMat { min-width:58px; text-align:right; }
+// Variance gauge: small bar that fills left (under) or right (over) from center.
+function VarianceGauge({ est, act, big = false }) {
+  if (!est || est <= 0) {
+    return <span className={`${s.varNone} ${big ? s.varBig : ''}`}>no estimate</span>;
+  }
+  const diff = act - est;
+  const pctNum = (diff / est) * 100;
+  const pct = Math.round(pctNum);
+  if (pct === 0) {
+    return (
+      <div className={`${s.varCell} ${big ? s.varBig : ''}`}>
+        <div className={s.gauge}>
+          <div className={s.gaugeTrack}></div>
+          <div className={s.gaugeMid}></div>
+        </div>
+        <span className={s.varPctNeutral}>0%</span>
+      </div>
+    );
+  }
+  const isOver = diff > 0;
+  // Cap visual width: 0 to 100% maps to 0 to 50% of gauge width
+  const magnitude = Math.min(Math.abs(pctNum), 100);
+  const fillWidth = (magnitude / 100) * 50; // out of total 100% width
 
-.woCard { border:1px solid var(--border); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:6px; background:var(--bg2); }
-.woCard:last-child { margin-bottom:0; }
-.woRow { display:flex; align-items:center; gap:8px; padding:9px 14px; cursor:pointer; transition:background .1s; font-size:12px; }
-.woRow:hover { background:var(--bg3); }
-.woStatus { font-family:var(--font-mono); font-size:10px; font-weight:500; padding:2px 6px; border-radius:10px; flex-shrink:0; min-width:58px; text-align:center; }
-.woClosed { background:var(--wood-bg); color:var(--wood); border:1px solid var(--wood-bdr); }
-.woReleased { background:var(--warn-bg); color:var(--warn); border:1px solid var(--warn-bdr); }
-.woOther { background:var(--bg4); color:var(--text3); border:1px solid var(--border); }
-.woId { font-family:var(--font-mono); font-size:11px; font-weight:500; color:var(--text); min-width:95px; }
-.woDate { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:75px; flex:1; }
-.woQty { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--accent); min-width:30px; text-align:center; }
-.woEst { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:52px; text-align:right; }
-.woAct { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); min-width:52px; text-align:right; }
-.woUnit { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--accent); min-width:48px; text-align:right; }
-.woMat { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:58px; text-align:right; }
-.woChevron { font-size:14px; color:var(--text3); font-weight:300; width:18px; text-align:center; flex-shrink:0; }
+  return (
+    <div className={`${s.varCell} ${big ? s.varBig : ''}`}>
+      <div className={s.gauge}>
+        <div className={s.gaugeTrack}></div>
+        <div
+          className={isOver ? s.gaugeFillOver : s.gaugeFillUnder}
+          style={isOver ? { width: `${fillWidth}%`, left: '50%' } : { width: `${fillWidth}%`, right: '50%' }}
+        ></div>
+        <div className={s.gaugeMid}></div>
+      </div>
+      <span className={isOver ? s.varPctOver : s.varPctUnder}>
+        {isOver ? '+' : '−'}{Math.abs(pct)}%
+      </span>
+    </div>
+  );
+}
 
-.woDetail { border-top:1px solid var(--border); padding:12px 14px; background:var(--bg3); }
-.qtyBanner { font-size:12px; color:var(--text2); background:var(--accent-bg); border:1px solid var(--accent-bdr); border-radius:var(--radius); padding:6px 12px; margin-bottom:10px; }
-.qtyBanner strong { color:var(--accent); font-weight:600; }
-.qtyWarning { color:var(--warn); font-style:italic; }
-.noData { font-size:12px; color:var(--text3); padding:6px 0; }
+function HoursTab({ wo }) {
+  const ops = wo.ops || [];
+  const totalAct = ops.reduce((sum, o) => sum + (o.h || 0), 0);
+  const totalEst = ops.reduce((sum, o) => sum + (o.e || 0), 0);
+  const qty = wo.q || 1;
 
-.detailTabs { display:flex; gap:4px; margin-bottom:8px; background:var(--bg4); padding:2px; border-radius:var(--radius); }
-.dtab { flex:1; padding:5px 12px; font-size:12px; font-weight:500; background:transparent; border:none; border-radius:4px; color:var(--text3); cursor:pointer; transition:all .15s; }
-.dtab:hover { color:var(--text2); }
-.dtabActive { background:var(--bg2); color:var(--text); box-shadow:var(--shadow-sm); }
+  // Aggregate by op name
+  const byName = {};
+  ops.forEach(o => {
+    const name = (o.n || '').trim();
+    if (!byName[name]) byName[name] = { name, h: 0, e: 0 };
+    byName[name].h += o.h || 0;
+    byName[name].e += o.e || 0;
+  });
+  const aggregated = Object.values(byName).sort((a, b) => b.h - a.h);
 
-.colHeaders { display:flex; align-items:center; gap:8px; padding:2px 0 6px; font-family:var(--font-mono); font-size:9px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border); margin-bottom:4px; }
-.colOp { min-width:130px; flex-shrink:0; }
-.colBar { flex:1; }
-.colEst { min-width:55px; text-align:right; }
-.colAct { min-width:50px; text-align:right; }
-.colPerUnit { min-width:48px; text-align:right; }
+  return (
+    <div className={s.opsTable}>
+      <div className={s.opsHeader}>
+        <span>Operation</span>
+        <span>Distribution</span>
+        <span>Est.</span>
+        <span>Actual</span>
+        <span>Variance</span>
+        <span>/unit</span>
+      </div>
+      {aggregated.map((op, i) => {
+        const pct = totalAct > 0 ? (op.h / totalAct) * 100 : 0;
+        return (
+          <div className={s.opsRow} key={i}>
+            <span className={s.opName}>{op.name}</span>
+            <div className={s.opBarWrap}>
+              <div className={s.opBar}><div className={s.opBarFill} style={{ width: `${pct}%` }}></div></div>
+              <span className={s.opBarPct}>{Math.round(pct)}%</span>
+            </div>
+            <span className={s.opEst}>{op.e > 0 ? f2(op.e) : <span style={{ color: 'var(--border2)' }}>—</span>}</span>
+            <span className={s.opAct}>{f2(op.h)}</span>
+            <VarianceGauge est={op.e} act={op.h} />
+            <span className={s.opUnit}>{f2(op.h / qty)}</span>
+          </div>
+        );
+      })}
 
-.opRow { display:flex; align-items:center; gap:8px; padding:3px 0; }
-.opName { font-size:12px; color:var(--text2); min-width:130px; flex-shrink:0; }
-.opBarWrap { flex:1; height:5px; background:var(--border); border-radius:10px; overflow:hidden; }
-.opBar { height:100%; border-radius:10px; transition:width .4s cubic-bezier(.4,0,.2,1); }
-.barMetal { background:var(--metal); }
-.barWood  { background:var(--wood); }
-.opEst { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:55px; text-align:right; flex-shrink:0; }
-.opAct { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); min-width:50px; text-align:right; flex-shrink:0; }
-.opPerUnitEst { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:48px; text-align:right; flex-shrink:0; }
-.opPerUnitAct { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--accent); min-width:48px; text-align:right; flex-shrink:0; }
+      <div className={s.opsTotal}>
+        <span className={s.totalLabel}>Total</span>
+        <span></span>
+        <span className={s.totalEst}>{totalEst > 0 ? f2(totalEst) : '—'}</span>
+        <span className={s.totalAct}>{f2(totalAct)} h</span>
+        <VarianceGauge est={totalEst} act={totalAct} big />
+        <span className={s.totalUnit}>{f2(totalAct / qty)}</span>
+      </div>
+    </div>
+  );
+}
 
-.opTotalRow { display:flex; align-items:center; gap:8px; padding:6px 0 2px; margin-top:4px; border-top:1px solid var(--border); }
-.opTotalLabel { font-size:12px; font-weight:500; color:var(--text2); min-width:130px; flex-shrink:0; }
-.opTotalEst { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:55px; text-align:right; flex:1; }
-.opTotalAct { font-family:var(--font-mono); font-size:12px; font-weight:500; color:var(--text); min-width:50px; text-align:right; }
-.opTotalPerUnitEst { font-family:var(--font-mono); font-size:11px; color:var(--text3); min-width:48px; text-align:right; }
-.opTotalPerUnitAct { font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--accent); min-width:48px; text-align:right; }
+function MaterialsTab({ wo }) {
+  const mats = wo.mats || [];
+  const qty = wo.q || 1;
+  const totalCost = mats.reduce((sum, m) => sum + (m.c || 0), 0);
 
-.matList { display:flex; flex-direction:column; }
-.matHeader { display:flex; gap:6px; padding:4px 0 6px; border-bottom:1px solid var(--border); font-family:var(--font-mono); font-size:9px; font-weight:500; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; }
-.matRow { display:flex; gap:6px; padding:5px 0; border-bottom:1px solid var(--border); align-items:center; font-size:12px; }
-.matRow:last-child { border-bottom:none; }
-.matColId, .matId { font-family:var(--font-mono); min-width:80px; flex-shrink:0; }
-.matId { color:var(--text2); }
-.matColDesc, .matDesc { flex:1; min-width:0; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.matColQty, .matQty { font-family:var(--font-mono); min-width:45px; text-align:right; flex-shrink:0; }
-.matQty { color:var(--text3); }
-.matColUnit, .matUnitQty { font-family:var(--font-mono); min-width:40px; text-align:right; flex-shrink:0; }
-.matUnitQty { color:var(--text); font-weight:500; }
-.matColCost, .matCost { font-family:var(--font-mono); min-width:60px; text-align:right; flex-shrink:0; }
-.matCost { color:var(--text3); }
-.matColUnitCost, .matUnitCost { font-family:var(--font-mono); min-width:55px; text-align:right; flex-shrink:0; }
-.matUnitCost { color:var(--text); font-weight:500; }
-.matTotal { font-family:var(--font-mono); font-size:12px; color:var(--text2); text-align:right; padding-top:6px; margin-top:4px; border-top:1px solid var(--border2); }
-.matTotalUnit { font-weight:500; color:var(--text); }
+  return (
+    <div className={s.matsTable}>
+      <div className={s.matsHeader}>
+        <span>Item</span>
+        <span>Description</span>
+        <span>Total qty</span>
+        <span>/unit</span>
+        <span>Total cost</span>
+        <span>$/unit</span>
+      </div>
+      {mats.map((m, i) => (
+        <div className={s.matsRow} key={i}>
+          <span className={s.matId}>{m.id}</span>
+          <span className={s.matDesc} title={m.d}>{m.d}</span>
+          <span className={s.matNum} style={{ color: 'var(--text3)' }}>{(m.q || 0).toFixed(1)}</span>
+          <span className={s.matNum}>{((m.q || 0) / qty).toFixed(2)}</span>
+          <span className={s.matNum} style={{ color: 'var(--text3)' }}>${(m.c || 0).toFixed(2)}</span>
+          <span className={s.matNum}>${((m.c || 0) / qty).toFixed(2)}</span>
+        </div>
+      ))}
+      <div className={s.matsTotal}>
+        <span>Total material cost</span>
+        <span className={s.matsTotalVal}>${totalCost.toFixed(2)}</span>
+        <span className={s.matsSep}></span>
+        <span>per unit</span>
+        <span className={s.matsTotalUnit}>${(totalCost / qty).toFixed(2)}</span>
+      </div>
+    </div>
+  );
+}
+
+function WORow({ wo, expanded, onToggle }) {
+  const [tab, setTab] = useState('hours');
+  const qty = wo.q || 1;
+  const status = (wo.s || '').toUpperCase();
+  const isClosed = status === 'C';
+  const isOpen = !status || status === 'O';
+  const matCost = (wo.mats || []).reduce((sum, m) => sum + (m.c || 0), 0);
+
+  return (
+    <div className={s.woCard}>
+      <div className={s.woRow} onClick={onToggle}>
+        <span className={`${s.status} ${isClosed ? s.statusClosed : isOpen ? s.statusOpen : s.statusRel}`}>
+          {isClosed ? 'Closed' : isOpen ? 'Open' : 'Released'}
+        </span>
+        <span className={s.woId}>{wo.id}</span>
+        <span className={s.woDate}>{formatDate(wo.d)}</span>
+        <span className={`${s.woNum} ${s.woQty}`}>{qty}</span>
+        <span className={`${s.woNum} ${s.woEst}`}>{wo.e > 0 ? f2(wo.e) : '—'}</span>
+        <span className={`${s.woNum} ${s.woAct}`}>{f2(wo.h)}</span>
+        <span className={`${s.woNum} ${s.woUnit}`}>{f2(wo.h / qty)}</span>
+        <span className={`${s.woNum} ${s.woMat}`}>{matCost > 0 ? `$${Math.round(matCost).toLocaleString()}` : '—'}</span>
+        <button className={s.woToggle} type="button">{expanded ? '−' : '+'}</button>
+      </div>
+
+      {expanded && (
+        <div className={s.woDetail}>
+          {qty > 1 && (
+            <div className={s.qtyBanner}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
+              </svg>
+              <span>Qty produced: <strong>{qty} units</strong> · per-unit values calculated on this quantity</span>
+            </div>
+          )}
+
+          <div className={s.detailTabs}>
+            <button
+              className={`${s.dtab} ${tab === 'hours' ? s.dtabActive : ''}`}
+              onClick={() => setTab('hours')}
+            >
+              Hours ({(wo.ops || []).length})
+            </button>
+            <button
+              className={`${s.dtab} ${tab === 'mats' ? s.dtabActive : ''}`}
+              onClick={() => setTab('mats')}
+            >
+              Materials ({(wo.mats || []).length})
+            </button>
+          </div>
+
+          {tab === 'hours' ? <HoursTab wo={wo} /> : <MaterialsTab wo={wo} />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PartCard({ part }) {
+  const [open, setOpen] = useState(true);
+  const [expandedWO, setExpandedWO] = useState(null);
+
+  const wos = part.wos || [];
+  const totalHrs = wos.reduce((sum, w) => sum + (w.h || 0), 0);
+  const matCount = wos.reduce((sum, w) => sum + ((w.mats || []).length), 0);
+
+  return (
+    <div className={s.card}>
+      <div className={s.cardRow} onClick={() => setOpen(!open)}>
+        <span className={`${s.shopPill} ${part.shop === 'Wood' ? s.shopWood : s.shopMetal}`}>
+          {part.shop || 'Metal'}
+        </span>
+        <span className={s.partnum}>{part.part_num}</span>
+        <span className={s.partName}>{part.description || '—'}</span>
+        <div className={s.metaGroup}>
+          {matCount > 0 && <span className={s.bomPill}>BOM</span>}
+          <div className={s.metaItem}>
+            <span className={s.metaLbl}>WOs</span>
+            <span className={s.metaVal}>{wos.length}</span>
+          </div>
+          <div className={s.metaItem}>
+            <span className={s.metaLbl}>Total hours</span>
+            <span className={s.metaVal}>{f2(totalHrs)} h</span>
+          </div>
+          <svg className={`${s.chevron} ${open ? s.chevronOpen : ''}`} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      {open && (
+        <div className={s.wosWrap}>
+          <div className={s.wosLabel}>
+            <span>Work Orders</span>
+            <span className={s.wosHint}>click row to expand</span>
+          </div>
+          <div className={s.woTableHead}>
+            <span>Status</span>
+            <span>WO ID</span>
+            <span>Date</span>
+            <span>Qty</span>
+            <span>Est.</span>
+            <span>Actual</span>
+            <span>/unit</span>
+            <span>Material</span>
+            <span></span>
+          </div>
+          {wos.map((wo, i) => (
+            <WORow
+              key={i}
+              wo={wo}
+              expanded={expandedWO === i}
+              onToggle={() => setExpandedWO(expandedWO === i ? null : i)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function HistorySearch() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [closedOnly, setClosedOnly] = useState(false);
+
+  const search = useCallback(async (q) => {
+    if (!q || q.trim().length < 2) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    try {
+      const r = await fetch(`/api/history/search?q=${encodeURIComponent(q)}`);
+      const data = await r.json();
+      setResults(data);
+    } catch (e) {
+      console.error(e);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => search(query), 250);
+    return () => clearTimeout(t);
+  }, [query, search]);
+
+  const filtered = closedOnly
+    ? results.map(p => ({ ...p, wos: (p.wos || []).filter(w => (w.s || '').toUpperCase() === 'C') }))
+              .filter(p => p.wos.length > 0)
+    : results;
+
+  return (
+    <div className={s.page}>
+      <div className={s.pageHeader}>
+        <h1 className={s.pageTitle}>Infor History</h1>
+        <p className={s.pageSub}>16,263 parts · 47,514 work orders · estimated vs actual hours</p>
+      </div>
+
+      <div className={s.search}>
+        <svg className={s.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by part number or description..."
+          autoFocus
+        />
+      </div>
+
+      <div className={s.filters}>
+        <label className={s.toggle}>
+          <input
+            type="checkbox"
+            checked={closedOnly}
+            onChange={(e) => setClosedOnly(e.target.checked)}
+            style={{ display: 'none' }}
+          />
+          <div className={`${s.toggleTrack} ${closedOnly ? s.toggleOn : ''}`}>
+            <div className={s.toggleThumb}></div>
+          </div>
+          <span className={s.toggleLabel}>Closed WOs only</span>
+        </label>
+        <span className={s.resultsCount}>
+          {loading ? 'searching...' : query.length < 2 ? 'type at least 2 characters' : `${filtered.length} part${filtered.length !== 1 ? 's' : ''} found`}
+        </span>
+      </div>
+
+      <div className={s.list}>
+        {filtered.map((part, i) => (
+          <PartCard key={`${part.part_num}-${i}`} part={part} />
+        ))}
+      </div>
+    </div>
+  );
+}
