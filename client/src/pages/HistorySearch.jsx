@@ -368,8 +368,17 @@ export default function HistorySearch() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [closedOnly, setClosedOnly] = useState(false);
+  const [stats, setStats] = useState(null);
   const inputRef = useRef(null);
   const lastTrackedRef = useRef('');
+
+  // Fetch live stats once on mount — keeps the header accurate after data updates.
+  useEffect(() => {
+    fetch('/api/history/stats')
+      .then(r => r.json())
+      .then(setStats)
+      .catch(() => {});
+  }, []);
 
   const search = useCallback(async (q) => {
     if (!q || q.trim().length < 2) {
@@ -418,7 +427,11 @@ export default function HistorySearch() {
     <div className={s.page}>
       <div className={s.pageHeader}>
         <h1 className={s.pageTitle}>Infor History</h1>
-        <p className={s.pageSub}>16,263 parts · 47,514 work orders · estimated vs actual hours</p>
+        <p className={s.pageSub}>
+          {stats
+            ? `${stats.parts.toLocaleString()} parts · ${stats.work_orders.toLocaleString()} work orders · estimated vs actual hours`
+            : 'estimated vs actual hours'}
+        </p>
       </div>
 
       <div className={s.search}>
